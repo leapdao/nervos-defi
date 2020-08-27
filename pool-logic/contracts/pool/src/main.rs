@@ -7,19 +7,14 @@
 // Import from `core` instead of from `std` since we are in no-std mode
 use core::result::Result;
 
-// Import heap related library from `alloc`
-// https://doc.rust-lang.org/alloc/index.html
-use alloc::{vec, vec::Vec};
-
 // Import CKB syscalls and structures
 // https://nervosnetwork.github.io/ckb-std/riscv64imac-unknown-none-elf/doc/ckb_std/index.html
 use ckb_std::{
     ckb_constants::Source,
-    ckb_types::{bytes::Bytes, prelude::*},
     debug, default_alloc, entry,
     error::SysError,
     high_level::{
-        load_cell_capacity, load_cell_data, load_cell_type_hash, load_script, load_tx_hash,
+        load_cell_capacity, load_cell_data, load_cell_type,
     },
     syscalls::load_witness,
 };
@@ -70,7 +65,7 @@ enum StateTransition {
     ClaimLiquidity,
 }
 
-static sudt_script_hash: [u8; 32] = [
+static SUDT_SCRIPT_HASH: [u8; 32] = [
     0x48, 0xdb, 0xf5, 0x9b, 0x4c, 0x7e, 0xe1, 0x54, 0x72, 0x38, 0x02, 0x1b, 0x48, 0x69, 0xbc, 0xee,
     0xdf, 0x4e, 0xea, 0x6b, 0x43, 0x77, 0x2e, 0x5d, 0x66, 0xef, 0x88, 0x65, 0xb6, 0xae, 0x72, 0x12,
 ];
@@ -133,12 +128,12 @@ fn verify_output_1() -> Result<u128, Error> {
     let mut cckb_minted_buf = [0u8; 16];
     cckb_minted_buf.copy_from_slice(&data[0..16]);
     let cckb_minted = u128::from_le_bytes(cckb_minted_buf);
-    let typeHash = load_cell_type_hash(1, Source::Output)?;
-    match typeHash {
-        Some(hash) => {
-            debug!("Type hash {:?}", hash);
-            if hash == sudt_script_hash {
-                return Ok(cckb_minted);
+    let type_script = load_cell_type(1, Source::Output)?;
+    match type_script {
+        Some(script) => {
+            debug!("Type hash {:?}", script.code_hash());
+            if script.code_hash().raw_data() == SUDT_SCRIPT_HASH[..].into() {
+                 return Ok(cckb_minted);
             } else {
                 return Err(Error::WrongTypeScript);
             }
@@ -168,16 +163,6 @@ fn verify_add_liquidity() -> Result<(), Error> {
 }
 
 fn main() -> Result<(), Error> {
-    // remove below examples and write your code here
-
-    // let script = load_script()?;
-    // let args: Bytes = script.args().unpack();
-    // debug!("script args is {:?}", args);
-
-    // let tx_hash = load_tx_hash()?;
-    // debug!("tx hash is {:?}", tx_hash);
-
-    // let _buf: Vec<_> = vec![0u8; 32];
 
     let state_transition = get_state_transition()?;
     debug!("State transition is {:?}", state_transition);
