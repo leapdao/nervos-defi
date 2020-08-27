@@ -28,8 +28,9 @@ fn test_basic() {
     let out_point_sudt = context.deploy_cell(contract_bin_sudt);
 
     // prepare scripts
+    let lock_hash: [u8; 32] = lock_script.calc_script_hash().unpack();
     let lock_script_sudt = context
-        .build_script(&out_point_sudt, Default::default())
+        .build_script(&out_point_sudt, lock_hash.to_vec().into())
         .expect("script");
     let lock_script_dep_sudt = CellDep::new_builder()
         .out_point(out_point_sudt)
@@ -43,7 +44,7 @@ fn test_basic() {
     let cckb_tot_sup_a = 530u128;
     let cckb_minted = 110u128;
     
-    let always_success_out_point = context.deploy_contract(ALWAYS_SUCCESS.clone());
+    let always_success_out_point = context.deploy_cell(ALWAYS_SUCCESS.clone());
         // build lock script
     let lock_script_as = context
         .build_script(&always_success_out_point, Default::default())
@@ -82,14 +83,15 @@ fn test_basic() {
     let mut ckb_total_supply_a = ckb_tot_sup_a.to_be_bytes().to_vec();
     let cckb_total_supply_a = cckb_tot_sup_a.to_be_bytes().to_vec();
     ckb_total_supply_a.extend(cckb_total_supply_a); 
-    
+    let output_cckb = cckb_minted.to_le_bytes().to_vec().len() as u64;
+
     let outputs = vec![
         CellOutput::new_builder()
             .capacity(after_unborrowed_cap.pack())
             .lock(lock_script.clone())
             .build(),
         CellOutput::new_builder()
-            .capacity(500u64.pack())
+            .capacity(output_cckb.pack())
             .lock(lock_script_as.clone())
             .type_(Some(lock_script_sudt.clone()).pack())
             .build(),
