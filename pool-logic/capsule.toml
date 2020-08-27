@@ -1,0 +1,5 @@
+deployment = "deployment.toml"
+
+[[contracts]]
+name = "pool"
+template_type = "Rust"
