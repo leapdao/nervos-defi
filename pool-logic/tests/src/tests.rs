@@ -24,12 +24,24 @@ fn test_basic() {
         .out_point(out_point)
         .build();
 
+    let contract_bin_sudt: Bytes = Loader::default().load_binary("sudt");
+    let out_point_sudt = context.deploy_cell(contract_bin_sudt);
+
+    // prepare scripts
+    let lock_script_sudt = context
+        .build_script(&out_point_sudt, Default::default())
+        .expect("script");
+    let lock_script_dep_sudt = CellDep::new_builder()
+        .out_point(out_point_sudt)
+        .build();
+
     let inital_unborrowed_cap = 1000u64;
     let after_unborrowed_cap = 456u64;
     let ckb_tot_sup = 1000u128;
     let cckb_tot_sup = 500u128;
     let ckb_tot_sup_a = 1100u128;
     let cckb_tot_sup_a = 530u128;
+    let cckb_minted = 110u128;
     
     let always_success_out_point = context.deploy_contract(ALWAYS_SUCCESS.clone());
         // build lock script
@@ -69,7 +81,7 @@ fn test_basic() {
 
     let mut ckb_total_supply_a = ckb_tot_sup_a.to_be_bytes().to_vec();
     let cckb_total_supply_a = cckb_tot_sup_a.to_be_bytes().to_vec();
-    ckb_total_supply_a.extend(cckb_total_supply_a);
+    ckb_total_supply_a.extend(cckb_total_supply_a); 
     
     let outputs = vec![
         CellOutput::new_builder()
@@ -79,10 +91,11 @@ fn test_basic() {
         CellOutput::new_builder()
             .capacity(500u64.pack())
             .lock(lock_script_as.clone())
+            .type_(Some(lock_script_sudt.clone()).pack())
             .build(),
     ];
 
-    let outputs_data = vec![ckb_total_supply_a.into(), Bytes::new()];
+    let outputs_data : Vec<Bytes> = vec![ckb_total_supply_a.into(), cckb_minted.to_le_bytes().to_vec().into()];
 
     let witnesses = vec![Bytes::from(vec![0 as u8; 1]); 1];
     // build transaction
@@ -93,6 +106,7 @@ fn test_basic() {
         .outputs_data(outputs_data.pack())
         .cell_dep(lock_script_dep)
         .cell_dep(lock_script_dep_as)
+        .cell_dep(lock_script_dep_sudt)
         .witnesses(witnesses.pack())
         .build();
     let tx = context.complete_tx(tx);
