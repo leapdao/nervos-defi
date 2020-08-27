@@ -43,6 +43,10 @@ enum Error {
     DataFieldIsTooSmall,
     NoTypeScript,
     WrongTypeScript,
+    WrongAfterCapacity,
+    WrongCCKBSupplyAfter,
+    WrongCKBSupplyAfter,
+    WrongAmountMinted,
     // Add customized errors here...
 }
 
@@ -157,6 +161,25 @@ fn verify_add_liquidity() -> Result<(), Error> {
         ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a
     );
     let cckb_minted = verify_output_1()?;
+
+    let x : u128 = (deposit_capacity as u128) * cckb_total_supply / ckb_total_supply;
+    debug!("x is {:?}", x);
+
+    if !(unborrowed_capacity_a == unborrowed_capacity + deposit_capacity) {
+        return Err(Error::WrongAfterCapacity);
+    }
+
+    if !(cckb_total_supply_a == cckb_total_supply + x) {
+        return Err(Error::WrongCCKBSupplyAfter);
+    }
+
+    if !(ckb_total_supply_a == ckb_total_supply + (deposit_capacity as u128)) {
+        return Err(Error::WrongCKBSupplyAfter);
+    }
+
+    if !(cckb_minted == x) {
+        return Err(Error::WrongAmountMinted);
+    }
 
     
     Ok(())

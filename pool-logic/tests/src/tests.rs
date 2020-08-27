@@ -37,12 +37,13 @@ fn test_basic() {
         .build();
 
     let inital_unborrowed_cap = 1000u64;
-    let after_unborrowed_cap = 456u64;
+    let after_unborrowed_cap = 1500u64;
     let ckb_tot_sup = 1000u128;
     let cckb_tot_sup = 500u128;
-    let ckb_tot_sup_a = 1100u128;
-    let cckb_tot_sup_a = 530u128;
-    let cckb_minted = 110u128;
+    let ckb_tot_sup_a = 1500u128;
+    let cckb_tot_sup_a = 750u128;
+    let cckb_minted = 250u128;
+    let deposit_capacity = 500u64;
     
     let always_success_out_point = context.deploy_cell(ALWAYS_SUCCESS.clone());
         // build lock script
@@ -71,7 +72,7 @@ fn test_basic() {
 
     let input_out_point_1 = context.create_cell(
         CellOutput::new_builder()
-            .capacity(after_unborrowed_cap.pack())
+            .capacity(deposit_capacity.pack())
             .lock(lock_script_as.clone())
             .build(),
         Bytes::new(),
