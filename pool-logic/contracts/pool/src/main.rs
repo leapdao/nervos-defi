@@ -162,6 +162,8 @@ fn verify_add_liquidity() -> Result<(), Error> {
         ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a
     );
     let cckb_minted = verify_output_1()?;
+
+    
     Ok(())
 }
 
