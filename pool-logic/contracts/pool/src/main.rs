@@ -35,18 +35,19 @@ fn entry() -> i8 {
 #[repr(i8)]
 enum Error {
     IndexOutOfBound = 1,
-    ItemMissing,
-    LengthNotEnough,
-    Encoding,
-    NoSuchStateTransition,
-    StateTransitionNotImplemented,
-    DataFieldIsTooSmall,
-    NoTypeScript,
-    WrongTypeScript,
-    WrongAfterCapacity,
-    WrongCCKBSupplyAfter,
-    WrongCKBSupplyAfter,
-    WrongAmountMinted,
+    ItemMissing = 2,
+    LengthNotEnough = 3,
+    Encoding = 4,
+    NoSuchStateTransition = 5,
+    StateTransitionNotImplemented = 6,
+    DataFieldIsTooSmall = 7,
+    NoTypeScript = 8,
+    WrongTypeScript = 9,
+    WrongAfterCapacity = 10,
+    WrongCCKBSupplyAfter = 11,
+    WrongCKBSupplyAfter = 12,
+    WrongAmountMinted = 13,
+    WrongAmountReleased = 14,
     // Add customized errors here...
 }
 
@@ -67,6 +68,9 @@ impl From<SysError> for Error {
 enum StateTransition {
     AddLiquidity,
     ClaimLiquidity,
+    Borrow,
+    Return,
+    Liquidate,
 }
 
 static SUDT_SCRIPT_HASH: [u8; 32] = [
@@ -81,6 +85,9 @@ fn get_state_transition() -> Result<StateTransition, Error> {
     match wit_buf[0] {
         0 => Ok(StateTransition::AddLiquidity),
         1 => Ok(StateTransition::ClaimLiquidity),
+        2 => Ok(StateTransition::Borrow),
+        3 => Ok(StateTransition::Return),
+        4 => Ok(StateTransition::Liquidate),
         _ => Err(Error::NoSuchStateTransition),
     }
 }
@@ -103,10 +110,31 @@ fn verify_input_0() -> Result<(u128, u128, u64), Error> {
     ))
 }
 
-fn verify_input_1() -> Result<u64, Error> {
+fn verify_lock_input_1() -> Result<u64, Error> {
     let deposit_capacity = load_cell_capacity(1, Source::Input)?;
     // should we check for 0 capacity?
     Ok(deposit_capacity)
+}
+
+fn verify_unlock_input_1() -> Result<u128, Error> {
+    let data = load_cell_data(1, Source::Input).unwrap();
+    let mut cckb_returned_buf = [0u8; 16];
+    cckb_returned_buf.copy_from_slice(&data[0..16]);
+    let cckb_returned = u128::from_le_bytes(cckb_returned_buf);
+    let type_script = load_cell_type(1, Source::Input)?;
+    match type_script {
+        Some(script) => {
+            debug!("Type hash {:?}", script.code_hash());
+            // TODO: also check script args here!!!
+            if script.code_hash().raw_data() == SUDT_SCRIPT_HASH[..].into() {
+                 return Ok(cckb_returned);
+            } else {
+                return Err(Error::WrongTypeScript);
+            }
+        }
+        None => Err(Error::NoTypeScript),
+    }
+
 }
 
 fn verify_output_0() -> Result<(u128, u128, u64), Error> {
@@ -127,7 +155,7 @@ fn verify_output_0() -> Result<(u128, u128, u64), Error> {
     ))
 }
 
-fn verify_output_1() -> Result<u128, Error> {
+fn verify_lock_output_1() -> Result<u128, Error> {
     let data = load_cell_data(1, Source::Output).unwrap();
     let mut cckb_minted_buf = [0u8; 16];
     cckb_minted_buf.copy_from_slice(&data[0..16]);
@@ -146,21 +174,26 @@ fn verify_output_1() -> Result<u128, Error> {
     }
 }
 
-fn verify_add_liquidity() -> Result<(), Error> {
+fn verify_unlock_output_1() -> Result<u64, Error> {
+    let unlock_capacity = load_cell_capacity(1, Source::Output)?;
+    Ok(unlock_capacity)
+}
+
+fn verify_lock_liquidity() -> Result<(), Error> {
     //check num inputs/outputs
     let (ckb_total_supply, cckb_total_supply, unborrowed_capacity) = verify_input_0()?;
     debug!(
         "Nums are {:?} {:?} {:?}",
         ckb_total_supply, cckb_total_supply, unborrowed_capacity
     );
-    let deposit_capacity = verify_input_1()?;
+    let deposit_capacity = verify_lock_input_1()?;
     debug!("Deposit capacity is  {:?}", deposit_capacity);
     let (ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a) = verify_output_0()?;
     debug!(
         "Nums are {:?} {:?} {:?}",
         ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a
     );
-    let cckb_minted = verify_output_1()?;
+    let cckb_minted = verify_lock_output_1()?;
 
     let x : u128 = (deposit_capacity as u128) * cckb_total_supply / ckb_total_supply;
     debug!("x is {:?}", x);
@@ -185,13 +218,68 @@ fn verify_add_liquidity() -> Result<(), Error> {
     Ok(())
 }
 
+fn verify_unlock_liquidity() -> Result<(), Error> {
+    //check num inputs/outputs
+    let (ckb_total_supply, cckb_total_supply, unborrowed_capacity) = verify_input_0()?;
+    debug!(
+        "Unlock Input 0: {:?} CKB-TS, {:?} cCKB-TS, {:?} unborrowed",
+        ckb_total_supply, cckb_total_supply, unborrowed_capacity
+    );
+    let unlock_amount = verify_unlock_input_1()?;
+    debug!("Unlock Input 1: {:?} returned cCKB", unlock_amount);
+    let (ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a) = verify_output_0()?;
+    debug!(
+        "Unlock Output 0: {:?} CKB-TS, {:?}, cCKB-TS, {:?} unborrowed",
+        ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a
+    );
+    let ckb_released = verify_unlock_output_1()?;
+    debug!("Unlock Output 1: {:?} released CKB", ckb_released);
+
+    let y : u128 = unlock_amount * ckb_total_supply / cckb_total_supply;
+    debug!("Unlock - y is {:?}", y);
+
+    if !(unborrowed_capacity_a == unborrowed_capacity - (y as u64)) {
+        return Err(Error::WrongAfterCapacity);
+    }
+
+    if !(cckb_total_supply_a == cckb_total_supply - unlock_amount) {
+        return Err(Error::WrongCCKBSupplyAfter);
+    }
+
+    if !(ckb_total_supply_a == ckb_total_supply - y) {
+        return Err(Error::WrongCKBSupplyAfter);
+    }
+
+    if !((ckb_released as u128) == y) {
+        return Err(Error::WrongAmountReleased);
+    }
+
+    
+    Ok(())
+}
+
+fn verify_borrow() -> Result<(), Error> {
+    return Err(Error::StateTransitionNotImplemented);
+}
+
+fn verify_return() -> Result<(), Error> {
+    return Err(Error::StateTransitionNotImplemented);
+}
+
+fn verify_liquidate() -> Result<(), Error> {
+    return Err(Error::StateTransitionNotImplemented);
+}
+
 fn main() -> Result<(), Error> {
 
     let state_transition = get_state_transition()?;
     debug!("State transition is {:?}", state_transition);
 
     match state_transition {
-        StateTransition::AddLiquidity => verify_add_liquidity(),
-        StateTransition::ClaimLiquidity => Err(Error::NoSuchStateTransition),
+        StateTransition::AddLiquidity => verify_lock_liquidity(),
+        StateTransition::ClaimLiquidity => verify_unlock_liquidity(),
+        StateTransition::Borrow => verify_borrow(),
+        StateTransition::Return => verify_return(),
+        StateTransition::Liquidate => verify_liquidate(),
     }
 }
