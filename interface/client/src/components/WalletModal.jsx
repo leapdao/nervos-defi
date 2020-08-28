@@ -65,7 +65,7 @@ const WalletModal = () => {
       setError("");
 
       const token = await walletService.requestAuth(
-        "Hello Lumos - Connection Request"
+        "Spin DEFi - Connection Request"
       );
 
       walletService.setToken(token);

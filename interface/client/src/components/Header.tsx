@@ -42,19 +42,19 @@ const AppName = styled.div`
 `;
 
 const Header = () => {
-    return (
-        <HeaderFrame>
-            <HeaderElement>
-                <Title href="/">
-                    <img alt="nervos" src="nervos-logo.png" />
-                    <AppName>Lumos Starter Pack</AppName>
-                </Title>
-            </HeaderElement>
-            <HeaderElement>
-                <WalletInfo />
-            </HeaderElement>
-        </HeaderFrame>
-    );
+  return (
+    <HeaderFrame>
+      <HeaderElement>
+        <Title href="/">
+          <img alt="nervos" src="fi.png" />
+          <AppName>Spin DEFi</AppName>
+        </Title>
+      </HeaderElement>
+      <HeaderElement>
+        <WalletInfo />
+      </HeaderElement>
+    </HeaderFrame>
+  );
 };
 
 export default Header;

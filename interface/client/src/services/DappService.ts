@@ -60,15 +60,60 @@ class DappService {
 
     const data = response.payload;
     data.params = parseCkbTransferParams(data.params);
-    data.description = "Hello Lumos - CKB Transfer Request"; // Description to display on Keyperring
+    data.description = "Spin DEFi - CKB Transfer Request"; // Description to display on Keyperring
     return data;
   }
+
+  async buildPoolDeposit(params): Promise<any> {
+    const response = await Api.post(this.dappServerUri, "/pool/deposit-build", {
+      sender: params.sender,
+      amount: params.amount.toString(),
+      txFee: params.txFee.toString(),
+    });
+
+    const data = response.payload;
+    data.params = parseCkbTransferParams(data.params);
+    data.description = "Spin DEFi - CKB Transfer Request"; // Description to display on Keyperring
+    return data;
+  } 
+
+
+  async buildPoolWithdraw(params): Promise<any> {
+    const response = await Api.post(this.dappServerUri, "/pool/withdraw-build", {
+      sender: params.sender,
+      amount: params.amount.toString(),
+      txFee: params.txFee.toString(),
+    });
+
+    const data = response.payload;
+    data.params = parseCkbTransferParams(data.params);
+    data.description = "Spin DEFi - CKB Transfer Request"; // Description to display on Keyperring
+    return data;
+  } 
 
   async transferCkb(
     params: CkbTransferParams,
     signatures: HexString[]
   ): Promise<Hash> {
     const response = await Api.post(this.dappServerUri, "/ckb/send-transfer", {
+      params: stringifyCkbTransferParams(params),
+      signatures,
+    });
+
+    return response.payload.txHash as Hash;
+  }
+
+  async transferDepositToPool(params, signatures: HexString[]): Promise<Hash> {
+    const response = await Api.post(this.dappServerUri, "/pool/deposit-transfer", {
+      params: stringifyCkbTransferParams(params),
+      signatures,
+    });
+
+    return response.payload.txHash as Hash;
+  }
+
+  async transferWithdrawFromPool(params, signatures: HexString[]): Promise<Hash> {
+    const response = await Api.post(this.dappServerUri, "/pool/withdraw-transfer", {
       params: stringifyCkbTransferParams(params),
       signatures,
     });

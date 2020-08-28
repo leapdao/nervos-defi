@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter, Redirect, Route, Switch } from "react-router-dom";
+import { HashRouter, Redirect, Route, Switch, Link } from "react-router-dom";
 import styled from "styled-components";
 import "./App.css";
 import Header from "./components/Header";
@@ -8,12 +8,15 @@ import * as dotenv from "dotenv";
 import { ModalStore } from "./stores/ModalStore";
 import { BalanceStore } from "./stores/BalanceStore";
 import { WalletStore } from "./stores/WalletStore";
-import { HelloCkb } from "./pages/HelloCkb";
 import { DataManager } from "./components/DataManager";
 import { TxTrackerStore } from "./stores/TxTrackerStore";
 
-dotenv.config();
+import Account from "./pages/Account";
+import Borrow from "./pages/Borrow";
+import Lend from "./pages/Lend";
+import Liquidate from "./pages/Liquidate";
 
+dotenv.config();
 const Container = styled.div`
   display: flex;
   flex-direction: row;
@@ -24,6 +27,18 @@ const Container = styled.div`
 
 const ContentWrapper = styled.div`
   margin: 0 auto;
+`;
+
+const NavBar = styled.ul`
+  list-style: none;
+  padding: 20px;
+  margin: 0;
+  text-align: center;
+`;
+
+const Nav = styled.li`
+  display: inline-block;
+  width: 20%;
 `;
 
 function App() {
@@ -40,9 +55,26 @@ function App() {
                   <Container>
                     <ContentWrapper>
                       <HashRouter>
+                        <NavBar>
+                          <Nav>
+                            <Link to="/account">Account</Link>
+                          </Nav>
+                          <Nav>
+                            <Link to="/borrow">Borrow</Link>
+                          </Nav>
+                          <Nav>
+                            <Link to="/lend">Lend</Link>
+                          </Nav>
+                          <Nav>
+                            <Link to="/liquidate">Liquidate</Link>
+                          </Nav>
+                        </NavBar>
                         <Switch>
-                          <Route path="/hello-ckb" component={HelloCkb} />
-                          <Redirect from="/" to="/hello-ckb" />
+                          <Route path="/account" component={Account} />
+                          <Route path="/borrow" component={Borrow} />
+                          <Route path="/lend" component={Lend} />
+                          <Route path="/liquidate" component={Liquidate} />
+                          <Redirect from="/" to="/lend" />
                         </Switch>
                       </HashRouter>
                     </ContentWrapper>

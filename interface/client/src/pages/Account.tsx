@@ -5,7 +5,7 @@ import TransferCkbForm from "../components/TransferCkbForm";
 import CkbValue from "../components/common/CkbValue";
 import { Grid } from "../components/common/Grid";
 
-export const HelloCkb = () => {
+const Page = () => {
   const { balanceState } = useContext(BalanceContext);
   const { walletState } = useContext(WalletContext);
 
@@ -22,7 +22,7 @@ export const HelloCkb = () => {
 
   return (
     <Grid>
-      <h1>Hello Lumos!</h1>
+      <h1>Spin DEFi!</h1>
       <h3>
         Your Ckb Balance:{" "}
         <CkbValue amount={balance} showPlaceholder={!balance} />
@@ -31,3 +31,5 @@ export const HelloCkb = () => {
     </Grid>
   );
 };
+
+export default Page;
