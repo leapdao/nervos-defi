@@ -122,7 +122,8 @@ async function main() {
     let [newPoolData, x] = parsePoolData(pool_cell.data, funding_cell.cell_output.capacity);
     console.log(newPoolData, x);
 
-    let capacityHex = "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(1600000000)).toString(16);
+    // 142 is the capacity of the second output
+    let capacityHex = "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(14200000000)).toString(16);
     console.log('capacityHex', capacityHex);
 
     console.log('poolcell', pool_cell);
@@ -148,7 +149,7 @@ async function main() {
         },
         {
             cell_output: {
-                capacity: '0x5f5e1000',
+                capacity: '0x34e62ce00',
                 lock: {
                     code_hash: SECP256k1Blake160CodeHash,
                     hash_type: 'type' as HashType,
@@ -181,9 +182,9 @@ async function main() {
 
     console.log(skeleton.get("signingEntries").toArray());
 
-    // return;
+    //return;
 
-    let signatures = ["0xf2601ede52a40de00f016fd3dc995225e08e2c25c9ce3c04e0c3db1c85641071543ece9effe2a9c048176b1ab885a30ffc22415a141762c806b28561406cf09701"];
+    let signatures = ["0xe4e8e42baa3e95f0bc31246e83adcfc98e7d6fc452e473096d9b8d12868aa09f184d4c81fc94ad351bc5c6866bfab32540fe6c70b36db42f15f1b70b18ff1f0201"];
 
     const tx = sealTransaction(skeleton, signatures);
 
