@@ -89,6 +89,52 @@ async function main() {
     let code_cell = cells_user[0];
     let funding_cell = cells_use[0];
     console.log(pool_cell, code_cell, funding_cell);
+
+    let inputs: List<Cell> = List([
+        pool_cell,
+    ]);
+
+    let deps: List<CellDep> = List([
+        {
+            out_point: code_cell.out_point,
+            dep_type: "code" as DepType,
+        }
+    ]);
+
+    const parsePoolData = (poolData: HexString, depositCapacity: HexString) => {
+        const cCKB_total_supply = BigInt(poolData.slice(0, 34));
+        const CKB_total_supply = BigInt("0x" + poolData.slice(34, 66));
+
+        const x = BigInt(depositCapacity) * cCKB_total_supply / CKB_total_supply;
+
+        const new_cCKB_total_supply = cCKB_total_supply + x;
+        const new_CKB_total_supply = CKB_total_supply + BigInt(depositCapacity);
+
+        return ["0x" + new_cCKB_total_supply.toString(16).padStart(32, "0") + new_CKB_total_supply.toString(16).padStart(32, "0"), x];
+    }
+
+    let [newPoolData, x] = parsePoolData(pool_cell.data, funding_cell.cell_output.capacity);
+
+    let outputs: List<Cell> = List([
+        {
+            cell_output: {
+                capacity: "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity)).toString(16),
+                lock: {
+                    code_hash: utils.ckbHash(code_cell.data).serializeJson(),
+                    hash_type: "type" as HashType,
+                    args: "0x00",
+                },
+            },
+            data: newPoolData,
+        },
+        {
+
+        }
+    ]);
+
+
+
+
     // let funding_cell =
     // let funding_cell = cells_user[0];
 

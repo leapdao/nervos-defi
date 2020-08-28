@@ -45,6 +45,8 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 exports.__esModule = true;
 var config_manager_1 = require("@ckb-lumos/config-manager");
 var indexer_1 = require("@ckb-lumos/indexer");
+var immutable_1 = require("immutable");
+var base_1 = require("@ckb-lumos/base");
 config_manager_1.initializeConfig();
 function sleep(ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
@@ -52,7 +54,7 @@ function sleep(ms) {
 function main() {
     var e_1, _a, e_2, _b, e_3, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell;
+        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell, inputs, deps, parsePoolData, outputs;
         return __generator(this, function (_k) {
             switch (_k.label) {
                 case 0:
@@ -179,6 +181,37 @@ function main() {
                     code_cell = cells_user[0];
                     funding_cell = cells_use[0];
                     console.log(pool_cell, code_cell, funding_cell);
+                    inputs = immutable_1.List([
+                        pool_cell,
+                    ]);
+                    deps = immutable_1.List([
+                        {
+                            out_point: code_cell.out_point,
+                            dep_type: "code"
+                        }
+                    ]);
+                    parsePoolData = function (poolData, depositCapacity) {
+                        var cCKB_total_supply = BigInt(poolData.slice(0, 34));
+                        var CKB_total_supply = BigInt("0x" + poolData.slice(34, 66));
+                        var x = BigInt(depositCapacity) * cCKB_total_supply / CKB_total_supply;
+                        var new_cCKB_total_supply = cCKB_total_supply + x;
+                        var new_CKB_total_supply = CKB_total_supply + BigInt(depositCapacity);
+                        return ["0x" + new_cCKB_total_supply.toString(16).padStart(32, "0") + new_CKB_total_supply.toString(16).padStart(32, "0"), x];
+                    };
+                    console.log(parsePoolData(pool_cell.data, funding_cell.cell_output.capacity));
+                    outputs = immutable_1.List([
+                        {
+                            cell_output: {
+                                capacity: "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity)).toString(16),
+                                lock: {
+                                    code_hash: base_1.utils.ckbHash(code_cell.data).serializeJson(),
+                                    hash_type: "type",
+                                    args: "0x00"
+                                }
+                            },
+                            data: "0x0000000000000000000000000000002000000000000000000000000000000020"
+                        }
+                    ]);
                     return [2 /*return*/];
             }
         });
