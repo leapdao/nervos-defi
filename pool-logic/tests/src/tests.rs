@@ -8,6 +8,7 @@ use ckb_tool::ckb_types::{
 };
 
 const MAX_CYCLES: u64 = 10_000_000;
+const SHANON: u64 = 100_000_000;
 
 #[test]
 fn test_lock_liquidity() {
@@ -43,7 +44,7 @@ fn test_lock_liquidity() {
     let ckb_tot_sup_a = 1500u128;
     let cckb_tot_sup_a = 750u128;
     let cckb_minted = 250u128;
-    let deposit_capacity = 500u64;
+    let deposit_capacity = 600u64;
     
     let always_success_out_point = context.deploy_cell(ALWAYS_SUCCESS.clone());
         // build lock script
@@ -84,7 +85,7 @@ fn test_lock_liquidity() {
     let mut ckb_total_supply_a = ckb_tot_sup_a.to_be_bytes().to_vec();
     let cckb_total_supply_a = cckb_tot_sup_a.to_be_bytes().to_vec();
     ckb_total_supply_a.extend(cckb_total_supply_a); 
-    let output_cckb = cckb_minted.to_le_bytes().to_vec().len() as u64;
+    let output_cckb = (cckb_minted.to_le_bytes().to_vec().len() as u64) * SHANON;
 
     let outputs = vec![
         CellOutput::new_builder()

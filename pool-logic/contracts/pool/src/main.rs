@@ -190,26 +190,54 @@ fn verify_unlock_output_1() -> Result<u64, Error> {
     Ok(unlock_capacity)
 }
 
+fn calculate_deposit_amount(deposit_capacity : u64) -> Result<u128, Error> {
+    let mut outputs_capacity: u128 = 0;
+    let mut inputs_capacity: u128 = 0;
+    for i in 0.. {
+        if i == 1 {
+            // we ignore the capacity of the Sudt output here
+            continue;
+        }
+        outputs_capacity += match load_cell_capacity(i, Source::Output) {
+            Ok(outputs_capacity) => (outputs_capacity as u128),
+            Err(SysError::IndexOutOfBound) => break,
+            Err(err) => return Err(err.into()),
+        }
+    }
+    for i in 0.. {
+        inputs_capacity += match load_cell_capacity(i, Source::Input) {
+            Ok(inputs_capacity) => (inputs_capacity as u128),
+            Err(SysError::IndexOutOfBound) => break,
+            Err(err) => return Err(err.into()),
+        }
+    }
+    debug!(" numburs {:?} {:?} {:?}", deposit_capacity, inputs_capacity, outputs_capacity);
+    Ok((deposit_capacity as u128) - (inputs_capacity - outputs_capacity))
+}
+
 fn verify_lock_liquidity() -> Result<(), Error> {
     //check num inputs/outputs
     let (ckb_total_supply, cckb_total_supply, unborrowed_capacity) = verify_input_0()?;
     debug!(
-        "Nums are {:?} {:?} {:?}",
+        "Lock Input 0: {:?} CKB-TS, {:?} cCKB-TS, {:?} unborrowed",
         ckb_total_supply, cckb_total_supply, unborrowed_capacity
     );
     let deposit_capacity = verify_lock_input_1()?;
-    debug!("Deposit capacity is  {:?}", deposit_capacity);
+    debug!("Unlock Input 1: {:?} deposit capacity", deposit_capacity);
     let (ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a) = verify_output_0()?;
     debug!(
-        "Nums are {:?} {:?} {:?}",
+        "Lock Output 0: {:?} CKB-TS, {:?}, cCKB-TS, {:?} unborrowed",
         ckb_total_supply_a, cckb_total_supply_a, unborrowed_capacity_a
     );
     let cckb_minted = verify_lock_output_1()?;
+    debug!("Lock Output 1: {:?} minted cCKB", cckb_minted);
 
-    let x : u128 = (deposit_capacity as u128) * cckb_total_supply / ckb_total_supply;
-    debug!("x is {:?}", x);
+    let deposit_amount : u128 = calculate_deposit_amount(deposit_capacity)?;
 
-    if !(unborrowed_capacity_a == unborrowed_capacity + deposit_capacity) {
+    let x : u128 = (deposit_amount as u128) * cckb_total_supply / ckb_total_supply;
+    debug!("Lock - x is {:?}", x);
+
+    if !(unborrowed_capacity_a == unborrowed_capacity + (deposit_amount as u64)) {
         return Err(Error::WrongAfterCapacity);
     }
 
@@ -217,7 +245,7 @@ fn verify_lock_liquidity() -> Result<(), Error> {
         return Err(Error::WrongCCKBSupplyAfter);
     }
 
-    if !(ckb_total_supply_a == ckb_total_supply + (deposit_capacity as u128)) {
+    if !(ckb_total_supply_a == ckb_total_supply + deposit_amount) {
         return Err(Error::WrongCKBSupplyAfter);
     }
 
