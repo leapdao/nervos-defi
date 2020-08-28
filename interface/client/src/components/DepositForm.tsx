@@ -41,6 +41,7 @@ const DepositForm = () => {
     try {
       const params = {
         sender: walletState.activeAccount.address,
+        senderArgs: walletState.activeAccount.lockScript.args, 
         amount: toShannons(formData.amount),
         txFee: defaultTxFee,
       };
