@@ -1,17 +1,14 @@
 import dotenv from "dotenv";
 import express from "express";
-import http from "http";
 import bodyParser from "body-parser";
 import cors from "cors";
-import {
-  Indexer,
-  TransactionCollector,
-} from "@ckb-lumos/indexer";
-import { initializeConfig, getConfig } from "@ckb-lumos/config-manager";
+import { Indexer } from "@ckb-lumos/indexer";
+import { initializeConfig } from "@ckb-lumos/config-manager";
 import { RPC } from "ckb-js-toolkit";
 import indexerRoutes from "./routes/indexer";
 import ckbRoutes from "./routes/ckb";
 import generalRoutes from "./routes/general";
+import poolRoutes from "./routes/pool";
 
 // Configure environment
 dotenv.config();
@@ -37,6 +34,7 @@ app.use(
 app.use("/", generalRoutes);
 app.use("/indexer", indexerRoutes);
 app.use("/ckb", ckbRoutes);
+app.use("/pool", poolRoutes);
 
 
 app.listen(process.env.PORT, () => {

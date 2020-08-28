@@ -1,4 +1,4 @@
-# Hello Lumos ☀️ Dapp Template
+# Spin DEFi ☀️ Dapp Template
 
 This project is a Typescript + React template to get you started building dApps for [CKB](https://docs.nervos.org/), using the [Lumos](https://github.com/nervosnetwork/lumos) framework.
 

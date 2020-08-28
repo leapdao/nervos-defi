@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import ActionButton from "./common/ActionButton";
+import { ActionButton } from "./common/Buttons";
 
 const Wrapper = styled.div`
   border: 1px solid black;
