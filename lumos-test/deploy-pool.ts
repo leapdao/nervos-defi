@@ -27,7 +27,6 @@ import { RPC } from "ckb-js-toolkit";
 
 
 initializeConfig();
-console.log(getConfig());
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -55,11 +54,32 @@ async function main() {
     for await (const cell of collector.collect()) {
         cells.push(cell);
     }
-    let funding_cell = cells[1];
-    let code_cell = cells[0];
+
+    let code_collector = new CellCollector(indexer, {
+        lock: {
+            code_hash:
+                "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            hash_type: "type",
+            args: "0x0000000000000000000000000000000000000000",
+        },
+        data: "any",
+    });
+
+    let cells_c = [];
+    for await (const cell of code_collector.collect()) {
+        cells_c.push(cell);
+    }
+
+
+
+    let funding_cell = cells[0];
+    let code_cell = cells_c[0];
+
+
+
 
     let inputs: List<Cell> = List([
-        funding_cell
+        // funding_cell
     ]);
 
     let deps: List<CellDep> = List([
@@ -92,14 +112,16 @@ async function main() {
         cellDeps: deps,
     });
 
-    skeleton = await secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(100000000));
+    skeleton = await secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(10000000000));
     skeleton = secp256k1Blake160.prepareSigningEntries(skeleton);
 
     console.log(JSON.stringify(createTransactionFromSkeleton(skeleton), null, 2));
 
     console.log(skeleton.get("signingEntries").toArray());
 
-    let signatures = ["0x8acdb82476b109d5e447549bd13a9e053bf5261140c86221f87f719745f8b8b362bc879b8b82a38a3b30faaeb2ba57c091291b8fd1ff2be8004308f58f1efadc01"];
+    // return;
+
+    let signatures = ["0x1e2fa5028bf1032a89b684918ad96e0988223e9b2d13f2ef0db32103f0272cd7225bbcbf74fdd2e00b1361b52b2ebe7973dfb1f7f61b4e7139dbb34d606b219200"];
 
     const tx = sealTransaction(skeleton, signatures);
 

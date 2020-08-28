@@ -55,17 +55,17 @@ function sleep(ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
 }
 function main() {
-    var e_1, _a;
+    var e_1, _a, e_2, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var indexer, tip, collector, cells, _b, _c, cell, e_1_1, funding_cell, code_cell, inputs, deps, outputs, skeleton, signatures, tx, rpc, res;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
+        var indexer, tip, collector, cells, _c, _d, cell, e_1_1, code_collector, cells_c, _e, _f, cell, e_2_1, funding_cell, code_cell, inputs, deps, outputs, skeleton, signatures, tx, rpc, res;
+        return __generator(this, function (_g) {
+            switch (_g.label) {
                 case 0:
                     indexer = new indexer_1.Indexer("http://127.0.0.1:8114", "./indexed-data");
                     indexer.startForever();
                     return [4 /*yield*/, indexer.tip()];
                 case 1:
-                    tip = _d.sent();
+                    tip = _g.sent();
                     console.log(tip);
                     collector = new indexer_1.CellCollector(indexer, {
                         lock: {
@@ -76,41 +76,79 @@ function main() {
                         data: "any"
                     });
                     cells = [];
-                    _d.label = 2;
+                    _g.label = 2;
                 case 2:
-                    _d.trys.push([2, 7, 8, 13]);
-                    _b = __asyncValues(collector.collect());
-                    _d.label = 3;
-                case 3: return [4 /*yield*/, _b.next()];
+                    _g.trys.push([2, 7, 8, 13]);
+                    _c = __asyncValues(collector.collect());
+                    _g.label = 3;
+                case 3: return [4 /*yield*/, _c.next()];
                 case 4:
-                    if (!(_c = _d.sent(), !_c.done)) return [3 /*break*/, 6];
-                    cell = _c.value;
+                    if (!(_d = _g.sent(), !_d.done)) return [3 /*break*/, 6];
+                    cell = _d.value;
                     cells.push(cell);
-                    _d.label = 5;
+                    _g.label = 5;
                 case 5: return [3 /*break*/, 3];
                 case 6: return [3 /*break*/, 13];
                 case 7:
-                    e_1_1 = _d.sent();
+                    e_1_1 = _g.sent();
                     e_1 = { error: e_1_1 };
                     return [3 /*break*/, 13];
                 case 8:
-                    _d.trys.push([8, , 11, 12]);
-                    if (!(_c && !_c.done && (_a = _b["return"]))) return [3 /*break*/, 10];
-                    return [4 /*yield*/, _a.call(_b)];
+                    _g.trys.push([8, , 11, 12]);
+                    if (!(_d && !_d.done && (_a = _c["return"]))) return [3 /*break*/, 10];
+                    return [4 /*yield*/, _a.call(_c)];
                 case 9:
-                    _d.sent();
-                    _d.label = 10;
+                    _g.sent();
+                    _g.label = 10;
                 case 10: return [3 /*break*/, 12];
                 case 11:
                     if (e_1) throw e_1.error;
                     return [7 /*endfinally*/];
                 case 12: return [7 /*endfinally*/];
                 case 13:
-                    funding_cell = cells[1];
-                    code_cell = cells[0];
-                    console.log("code cell", code_cell);
+                    code_collector = new indexer_1.CellCollector(indexer, {
+                        lock: {
+                            code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                            hash_type: "type",
+                            args: "0x0000000000000000000000000000000000000000"
+                        },
+                        data: "any"
+                    });
+                    cells_c = [];
+                    _g.label = 14;
+                case 14:
+                    _g.trys.push([14, 19, 20, 25]);
+                    _e = __asyncValues(code_collector.collect());
+                    _g.label = 15;
+                case 15: return [4 /*yield*/, _e.next()];
+                case 16:
+                    if (!(_f = _g.sent(), !_f.done)) return [3 /*break*/, 18];
+                    cell = _f.value;
+                    cells_c.push(cell);
+                    _g.label = 17;
+                case 17: return [3 /*break*/, 15];
+                case 18: return [3 /*break*/, 25];
+                case 19:
+                    e_2_1 = _g.sent();
+                    e_2 = { error: e_2_1 };
+                    return [3 /*break*/, 25];
+                case 20:
+                    _g.trys.push([20, , 23, 24]);
+                    if (!(_f && !_f.done && (_b = _e["return"]))) return [3 /*break*/, 22];
+                    return [4 /*yield*/, _b.call(_e)];
+                case 21:
+                    _g.sent();
+                    _g.label = 22;
+                case 22: return [3 /*break*/, 24];
+                case 23:
+                    if (e_2) throw e_2.error;
+                    return [7 /*endfinally*/];
+                case 24: return [7 /*endfinally*/];
+                case 25:
+                    funding_cell = cells[0];
+                    code_cell = cells_c[0];
                     inputs = immutable_1.List([
-                        funding_cell
+                    // funding_cell
                     ]);
                     deps = immutable_1.List([
                         {
@@ -137,19 +175,19 @@ function main() {
                         outputs: outputs,
                         cellDeps: deps
                     });
-                    return [4 /*yield*/, common_scripts_1.secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(100000000))];
-                case 14:
-                    skeleton = _d.sent();
+                    return [4 /*yield*/, common_scripts_1.secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(10000000000))];
+                case 26:
+                    skeleton = _g.sent();
                     skeleton = common_scripts_1.secp256k1Blake160.prepareSigningEntries(skeleton);
                     console.log(JSON.stringify(helpers_1.createTransactionFromSkeleton(skeleton), null, 2));
                     console.log(skeleton.get("signingEntries").toArray());
-                    signatures = ["0xc005f95648decb00449c668fff743f406e7eaaba3e7547a3132d553702f2f0616e9f7d741aae10566d52b51ab2ce5ab854f72129307e1d6f257f7531dac1accc01"];
+                    signatures = ["0x1e2fa5028bf1032a89b684918ad96e0988223e9b2d13f2ef0db32103f0272cd7225bbcbf74fdd2e00b1361b52b2ebe7973dfb1f7f61b4e7139dbb34d606b219200"];
                     tx = helpers_1.sealTransaction(skeleton, signatures);
                     console.log(tx);
                     rpc = new ckb_js_toolkit_1.RPC("http://127.0.0.1:8114");
                     return [4 /*yield*/, rpc.send_transaction(tx)];
-                case 15:
-                    res = _d.sent();
+                case 27:
+                    res = _g.sent();
                     console.log(res);
                     console.log("END");
                     return [2 /*return*/];
