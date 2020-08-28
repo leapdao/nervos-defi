@@ -14,9 +14,10 @@ use ckb_std::{
     debug, default_alloc, entry,
     error::SysError,
     high_level::{
-        load_cell_capacity, load_cell_data, load_cell_type,
+        load_cell_capacity, load_cell_data, load_cell_type, load_cell_lock_hash, load_script_hash
     },
     syscalls::load_witness,
+    
 };
 
 entry!(entry);
@@ -48,6 +49,7 @@ enum Error {
     WrongCKBSupplyAfter = 12,
     WrongAmountMinted = 13,
     WrongAmountReleased = 14,
+    WrongLockScript = 15,
     // Add customized errors here...
 }
 
@@ -254,7 +256,6 @@ fn verify_unlock_liquidity() -> Result<(), Error> {
         return Err(Error::WrongAmountReleased);
     }
 
-    
     Ok(())
 }
 
@@ -270,7 +271,24 @@ fn verify_liquidate() -> Result<(), Error> {
     return Err(Error::StateTransitionNotImplemented);
 }
 
+fn verify_pool_logic() -> Result<(), Error> {
+    let script_hash = load_script_hash().unwrap();
+    debug!("script hash {:?}", script_hash);
+    let in_lock_script = load_cell_lock_hash(0, Source::Input)?;
+    debug!("lock hash {:?}", in_lock_script);
+    if in_lock_script != script_hash {
+        return Err(Error::WrongLockScript);
+    }
+    let out_lock_script = load_cell_lock_hash(0, Source::Output)?;
+    if out_lock_script != script_hash {
+        return Err(Error::WrongLockScript);
+    }
+    Ok(())
+}
+
 fn main() -> Result<(), Error> {
+
+    verify_pool_logic()?;
 
     let state_transition = get_state_transition()?;
     debug!("State transition is {:?}", state_transition);
