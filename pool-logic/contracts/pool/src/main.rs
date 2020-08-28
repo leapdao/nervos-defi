@@ -50,6 +50,7 @@ enum Error {
     WrongAmountMinted = 13,
     WrongAmountReleased = 14,
     WrongLockScript = 15,
+    WrongSudtArgs = 16,
     // Add customized errors here...
 }
 
@@ -119,17 +120,25 @@ fn verify_lock_input_1() -> Result<u64, Error> {
 }
 
 fn verify_unlock_input_1() -> Result<u128, Error> {
+    // load amount
     let data = load_cell_data(1, Source::Input).unwrap();
     let mut cckb_returned_buf = [0u8; 16];
     cckb_returned_buf.copy_from_slice(&data[0..16]);
     let cckb_returned = u128::from_le_bytes(cckb_returned_buf);
+
+    // verify SUDT type
     let type_script = load_cell_type(1, Source::Input)?;
     match type_script {
         Some(script) => {
             debug!("Type hash {:?}", script.code_hash());
-            // TODO: also check script args here!!!
             if script.code_hash().raw_data() == SUDT_SCRIPT_HASH[..].into() {
-                 return Ok(cckb_returned);
+                // also checking script args
+                let script_hash = load_script_hash().unwrap();
+                if script.args().raw_data() == script_hash[..].into() {
+                    return Ok(cckb_returned);
+                } else {
+                    return Err(Error::WrongSudtArgs);
+                }
             } else {
                 return Err(Error::WrongTypeScript);
             }
@@ -273,12 +282,12 @@ fn verify_liquidate() -> Result<(), Error> {
 
 fn verify_pool_logic() -> Result<(), Error> {
     let script_hash = load_script_hash().unwrap();
-    debug!("script hash {:?}", script_hash);
+    // verify first input
     let in_lock_script = load_cell_lock_hash(0, Source::Input)?;
-    debug!("lock hash {:?}", in_lock_script);
     if in_lock_script != script_hash {
         return Err(Error::WrongLockScript);
     }
+    // verify first output
     let out_lock_script = load_cell_lock_hash(0, Source::Output)?;
     if out_lock_script != script_hash {
         return Err(Error::WrongLockScript);
