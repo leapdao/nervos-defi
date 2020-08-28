@@ -25,6 +25,14 @@ import {
 import { secp256k1Blake160 } from "@ckb-lumos/common-scripts";
 import { RPC } from "ckb-js-toolkit";
 
+const SECP256k1Blake160CodeHash = '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8';
+const EMPTY_ARGS = "0x0000000000000000000000000000000000000000";
+
+
+// inputs
+const userLockArgs = '0x4e7a1bae99f17d4008b4f15a9b809240ca213ca3';
+const userAddress = 'ckt1qyqyu7sm46vlzl2qpz60zk5mszfypj3p8j3srahsnn';
+const poolCodeHash = '0x25bb89d7e601d70d2111c5ced8effc7a7c0d8a459e55f3efe193c0ff0bf07ce1';
 
 initializeConfig();
 
@@ -39,8 +47,7 @@ async function main() {
 
     let collector = new CellCollector(indexer, {
         lock: {
-            code_hash:
-                "0x9b6e16123e192dcc568fec19f428831cc653ed5dd9ce819d060c17c50159cfcc",
+            code_hash: poolCodeHash,
             hash_type: "type",
             args: "0x00",
         },
@@ -49,20 +56,18 @@ async function main() {
 
     let collector1 = new CellCollector(indexer, {
         lock: {
-            code_hash:
-                "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            code_hash: SECP256k1Blake160CodeHash,
             hash_type: "type",
-            args: "0x0000000000000000000000000000000000000000",
+            args: EMPTY_ARGS,
         },
         data: "any",
     });
 
     let collector2 = new CellCollector(indexer, {
         lock: {
-            code_hash:
-                "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            code_hash: SECP256k1Blake160CodeHash,
             hash_type: "type",
-            args: "0xcc38ca2352de33fabae029878e83c4c85561ed1f",
+            args: userLockArgs,
         },
         data: "any",
     });
@@ -92,6 +97,7 @@ async function main() {
 
     let inputs: List<Cell> = List([
         pool_cell,
+        funding_cell
     ]);
 
     let deps: List<CellDep> = List([
@@ -114,31 +120,81 @@ async function main() {
     }
 
     let [newPoolData, x] = parsePoolData(pool_cell.data, funding_cell.cell_output.capacity);
+    console.log(newPoolData, x);
+
+    let capacityHex = "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(1600000000)).toString(16);
+    console.log('capacityHex', capacityHex);
+
+    console.log('poolcell', pool_cell);
+
+      const lockScript: Script = {
+        hash_type: 'type' as HashType,
+        code_hash: poolCodeHash,
+        args: EMPTY_ARGS,
+      }
+    const lockHash = utils.computeScriptHash(lockScript);
 
     let outputs: List<Cell> = List([
         {
             cell_output: {
-                capacity: "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity)).toString(16),
+                capacity: capacityHex,
                 lock: {
                     code_hash: utils.ckbHash(code_cell.data).serializeJson(),
                     hash_type: "type" as HashType,
                     args: "0x00",
                 },
             },
-            data: newPoolData,
+            data: newPoolData as string,
         },
         {
+            cell_output: {
+                capacity: '0x5f5e1000',
+                lock: {
+                    code_hash: SECP256k1Blake160CodeHash,
+                    hash_type: 'type' as HashType,
+                    args: userLockArgs
+                },
+                type: {
+                    code_hash: '0x48dbf59b4c7ee1547238021b4869bceedf4eea6b43772e5d66ef8865b6ae7212',
+                    hash_type: 'type' as HashType,
+                    args: lockHash
+                }
 
+            },
+            data: '0x' + x.toString(16).padStart(32, '0'),
         }
     ]);
 
+    let skeleton = TransactionSkeleton({
+        cellProvider: indexer,
+        inputs: inputs,
+        outputs: outputs,
+        cellDeps: deps,
+        witnesses: List(['0x00', '0x55000000100000005500000055000000410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000']),
+    });
+
+    //skeleton = await secp256k1Blake160.payFee(skeleton, userAddress, BigInt(10000000000));
+
+    skeleton = secp256k1Blake160.prepareSigningEntries(skeleton);
+    console.log('after fee');
+    console.log(JSON.stringify(createTransactionFromSkeleton(skeleton), null, 2));
+
+    console.log(skeleton.get("signingEntries").toArray());
+
+    // return;
+
+    let signatures = ["0xf2601ede52a40de00f016fd3dc995225e08e2c25c9ce3c04e0c3db1c85641071543ece9effe2a9c048176b1ab885a30ffc22415a141762c806b28561406cf09701"];
+
+    const tx = sealTransaction(skeleton, signatures);
+
+    console.log(tx);
 
 
+    const rpc = new RPC("http://127.0.0.1:8114");
+    let res = await rpc.send_transaction(tx);
+    console.log(res);
 
-    // let funding_cell =
-    // let funding_cell = cells_user[0];
-
-
+    console.log("END");
 }
 
 main();

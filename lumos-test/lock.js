@@ -47,6 +47,15 @@ var config_manager_1 = require("@ckb-lumos/config-manager");
 var indexer_1 = require("@ckb-lumos/indexer");
 var immutable_1 = require("immutable");
 var base_1 = require("@ckb-lumos/base");
+var helpers_1 = require("@ckb-lumos/helpers");
+var common_scripts_1 = require("@ckb-lumos/common-scripts");
+var ckb_js_toolkit_1 = require("ckb-js-toolkit");
+var SECP256k1Blake160CodeHash = '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8';
+var EMPTY_ARGS = "0x0000000000000000000000000000000000000000";
+// inputs
+var userLockArgs = '0x4e7a1bae99f17d4008b4f15a9b809240ca213ca3';
+var userAddress = 'ckt1qyqyu7sm46vlzl2qpz60zk5mszfypj3p8j3srahsnn';
+var poolCodeHash = '0x25bb89d7e601d70d2111c5ced8effc7a7c0d8a459e55f3efe193c0ff0bf07ce1';
 config_manager_1.initializeConfig();
 function sleep(ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
@@ -54,15 +63,15 @@ function sleep(ms) {
 function main() {
     var e_1, _a, e_2, _b, e_3, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell, inputs, deps, parsePoolData, outputs;
-        return __generator(this, function (_k) {
-            switch (_k.label) {
+        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell, inputs, deps, parsePoolData, _k, newPoolData, x, capacityHex, lockScript, lockHash, outputs, skeleton, signatures, tx, rpc, res;
+        return __generator(this, function (_l) {
+            switch (_l.label) {
                 case 0:
                     indexer = new indexer_1.Indexer("http://127.0.0.1:8114", "./indexed-data");
                     indexer.startForever();
                     collector = new indexer_1.CellCollector(indexer, {
                         lock: {
-                            code_hash: "0x9b6e16123e192dcc568fec19f428831cc653ed5dd9ce819d060c17c50159cfcc",
+                            code_hash: poolCodeHash,
                             hash_type: "type",
                             args: "0x00"
                         },
@@ -70,45 +79,45 @@ function main() {
                     });
                     collector1 = new indexer_1.CellCollector(indexer, {
                         lock: {
-                            code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                            code_hash: SECP256k1Blake160CodeHash,
                             hash_type: "type",
-                            args: "0x0000000000000000000000000000000000000000"
+                            args: EMPTY_ARGS
                         },
                         data: "any"
                     });
                     collector2 = new indexer_1.CellCollector(indexer, {
                         lock: {
-                            code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                            code_hash: SECP256k1Blake160CodeHash,
                             hash_type: "type",
-                            args: "0xcc38ca2352de33fabae029878e83c4c85561ed1f"
+                            args: userLockArgs
                         },
                         data: "any"
                     });
                     cells_f = [];
-                    _k.label = 1;
+                    _l.label = 1;
                 case 1:
-                    _k.trys.push([1, 6, 7, 12]);
+                    _l.trys.push([1, 6, 7, 12]);
                     _d = __asyncValues(collector.collect());
-                    _k.label = 2;
+                    _l.label = 2;
                 case 2: return [4 /*yield*/, _d.next()];
                 case 3:
-                    if (!(_e = _k.sent(), !_e.done)) return [3 /*break*/, 5];
+                    if (!(_e = _l.sent(), !_e.done)) return [3 /*break*/, 5];
                     cell = _e.value;
                     cells_f.push(cell);
-                    _k.label = 4;
+                    _l.label = 4;
                 case 4: return [3 /*break*/, 2];
                 case 5: return [3 /*break*/, 12];
                 case 6:
-                    e_1_1 = _k.sent();
+                    e_1_1 = _l.sent();
                     e_1 = { error: e_1_1 };
                     return [3 /*break*/, 12];
                 case 7:
-                    _k.trys.push([7, , 10, 11]);
+                    _l.trys.push([7, , 10, 11]);
                     if (!(_e && !_e.done && (_a = _d["return"]))) return [3 /*break*/, 9];
                     return [4 /*yield*/, _a.call(_d)];
                 case 8:
-                    _k.sent();
-                    _k.label = 9;
+                    _l.sent();
+                    _l.label = 9;
                 case 9: return [3 /*break*/, 11];
                 case 10:
                     if (e_1) throw e_1.error;
@@ -116,30 +125,30 @@ function main() {
                 case 11: return [7 /*endfinally*/];
                 case 12:
                     cells_user = [];
-                    _k.label = 13;
+                    _l.label = 13;
                 case 13:
-                    _k.trys.push([13, 18, 19, 24]);
+                    _l.trys.push([13, 18, 19, 24]);
                     _f = __asyncValues(collector1.collect());
-                    _k.label = 14;
+                    _l.label = 14;
                 case 14: return [4 /*yield*/, _f.next()];
                 case 15:
-                    if (!(_g = _k.sent(), !_g.done)) return [3 /*break*/, 17];
+                    if (!(_g = _l.sent(), !_g.done)) return [3 /*break*/, 17];
                     cell = _g.value;
                     cells_user.push(cell);
-                    _k.label = 16;
+                    _l.label = 16;
                 case 16: return [3 /*break*/, 14];
                 case 17: return [3 /*break*/, 24];
                 case 18:
-                    e_2_1 = _k.sent();
+                    e_2_1 = _l.sent();
                     e_2 = { error: e_2_1 };
                     return [3 /*break*/, 24];
                 case 19:
-                    _k.trys.push([19, , 22, 23]);
+                    _l.trys.push([19, , 22, 23]);
                     if (!(_g && !_g.done && (_b = _f["return"]))) return [3 /*break*/, 21];
                     return [4 /*yield*/, _b.call(_f)];
                 case 20:
-                    _k.sent();
-                    _k.label = 21;
+                    _l.sent();
+                    _l.label = 21;
                 case 21: return [3 /*break*/, 23];
                 case 22:
                     if (e_2) throw e_2.error;
@@ -147,30 +156,30 @@ function main() {
                 case 23: return [7 /*endfinally*/];
                 case 24:
                     cells_use = [];
-                    _k.label = 25;
+                    _l.label = 25;
                 case 25:
-                    _k.trys.push([25, 30, 31, 36]);
+                    _l.trys.push([25, 30, 31, 36]);
                     _h = __asyncValues(collector2.collect());
-                    _k.label = 26;
+                    _l.label = 26;
                 case 26: return [4 /*yield*/, _h.next()];
                 case 27:
-                    if (!(_j = _k.sent(), !_j.done)) return [3 /*break*/, 29];
+                    if (!(_j = _l.sent(), !_j.done)) return [3 /*break*/, 29];
                     cell = _j.value;
                     cells_use.push(cell);
-                    _k.label = 28;
+                    _l.label = 28;
                 case 28: return [3 /*break*/, 26];
                 case 29: return [3 /*break*/, 36];
                 case 30:
-                    e_3_1 = _k.sent();
+                    e_3_1 = _l.sent();
                     e_3 = { error: e_3_1 };
                     return [3 /*break*/, 36];
                 case 31:
-                    _k.trys.push([31, , 34, 35]);
+                    _l.trys.push([31, , 34, 35]);
                     if (!(_j && !_j.done && (_c = _h["return"]))) return [3 /*break*/, 33];
                     return [4 /*yield*/, _c.call(_h)];
                 case 32:
-                    _k.sent();
-                    _k.label = 33;
+                    _l.sent();
+                    _l.label = 33;
                 case 33: return [3 /*break*/, 35];
                 case 34:
                     if (e_3) throw e_3.error;
@@ -183,6 +192,7 @@ function main() {
                     console.log(pool_cell, code_cell, funding_cell);
                     inputs = immutable_1.List([
                         pool_cell,
+                        funding_cell
                     ]);
                     deps = immutable_1.List([
                         {
@@ -198,20 +208,67 @@ function main() {
                         var new_CKB_total_supply = CKB_total_supply + BigInt(depositCapacity);
                         return ["0x" + new_cCKB_total_supply.toString(16).padStart(32, "0") + new_CKB_total_supply.toString(16).padStart(32, "0"), x];
                     };
-                    console.log(parsePoolData(pool_cell.data, funding_cell.cell_output.capacity));
+                    _k = parsePoolData(pool_cell.data, funding_cell.cell_output.capacity), newPoolData = _k[0], x = _k[1];
+                    console.log(newPoolData, x);
+                    capacityHex = "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(1600000000)).toString(16);
+                    console.log('capacityHex', capacityHex);
+                    console.log('poolcell', pool_cell);
+                    lockScript = {
+                        hash_type: 'type',
+                        code_hash: poolCodeHash,
+                        args: EMPTY_ARGS
+                    };
+                    lockHash = base_1.utils.computeScriptHash(lockScript);
                     outputs = immutable_1.List([
                         {
                             cell_output: {
-                                capacity: "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity)).toString(16),
+                                capacity: capacityHex,
                                 lock: {
                                     code_hash: base_1.utils.ckbHash(code_cell.data).serializeJson(),
                                     hash_type: "type",
                                     args: "0x00"
                                 }
                             },
-                            data: "0x0000000000000000000000000000002000000000000000000000000000000020"
+                            data: newPoolData
+                        },
+                        {
+                            cell_output: {
+                                capacity: '0x5f5e1000',
+                                lock: {
+                                    code_hash: SECP256k1Blake160CodeHash,
+                                    hash_type: 'type',
+                                    args: userLockArgs
+                                },
+                                type: {
+                                    code_hash: '0x48dbf59b4c7ee1547238021b4869bceedf4eea6b43772e5d66ef8865b6ae7212',
+                                    hash_type: 'type',
+                                    args: lockHash
+                                }
+                            },
+                            data: '0x' + x.toString(16).padStart(32, '0')
                         }
                     ]);
+                    skeleton = helpers_1.TransactionSkeleton({
+                        cellProvider: indexer,
+                        inputs: inputs,
+                        outputs: outputs,
+                        cellDeps: deps,
+                        witnesses: immutable_1.List(['0x00', '0x55000000100000005500000055000000410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'])
+                    });
+                    //skeleton = await secp256k1Blake160.payFee(skeleton, userAddress, BigInt(10000000000));
+                    skeleton = common_scripts_1.secp256k1Blake160.prepareSigningEntries(skeleton);
+                    console.log('after fee');
+                    console.log(JSON.stringify(helpers_1.createTransactionFromSkeleton(skeleton), null, 2));
+                    console.log(skeleton.get("signingEntries").toArray());
+                    signatures = ["0xf2601ede52a40de00f016fd3dc995225e08e2c25c9ce3c04e0c3db1c85641071543ece9effe2a9c048176b1ab885a30ffc22415a141762c806b28561406cf09701"];
+                    tx = helpers_1.sealTransaction(skeleton, signatures);
+                    console.log(tx);
+                    rpc = new ckb_js_toolkit_1.RPC("http://127.0.0.1:8114");
+                    return [4 /*yield*/, rpc.send_transaction(tx)];
+                case 37:
+                    res = _l.sent();
+                    console.log(res);
+                    console.log("END");
                     return [2 /*return*/];
             }
         });

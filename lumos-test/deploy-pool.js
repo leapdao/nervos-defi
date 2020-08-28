@@ -63,49 +63,52 @@ function main() {
                 case 0:
                     indexer = new indexer_1.Indexer("http://127.0.0.1:8114", "./indexed-data");
                     indexer.startForever();
-                    return [4 /*yield*/, indexer.tip()];
+                    return [4 /*yield*/, sleep(10000)];
                 case 1:
+                    _g.sent();
+                    return [4 /*yield*/, indexer.tip()];
+                case 2:
                     tip = _g.sent();
                     console.log(tip);
                     collector = new indexer_1.CellCollector(indexer, {
                         lock: {
                             code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
                             hash_type: "type",
-                            args: "0xcc38ca2352de33fabae029878e83c4c85561ed1f"
+                            args: "0x4e7a1bae99f17d4008b4f15a9b809240ca213ca3"
                         },
                         data: "any"
                     });
                     cells = [];
-                    _g.label = 2;
-                case 2:
-                    _g.trys.push([2, 7, 8, 13]);
-                    _c = __asyncValues(collector.collect());
                     _g.label = 3;
-                case 3: return [4 /*yield*/, _c.next()];
-                case 4:
-                    if (!(_d = _g.sent(), !_d.done)) return [3 /*break*/, 6];
+                case 3:
+                    _g.trys.push([3, 8, 9, 14]);
+                    _c = __asyncValues(collector.collect());
+                    _g.label = 4;
+                case 4: return [4 /*yield*/, _c.next()];
+                case 5:
+                    if (!(_d = _g.sent(), !_d.done)) return [3 /*break*/, 7];
                     cell = _d.value;
                     cells.push(cell);
-                    _g.label = 5;
-                case 5: return [3 /*break*/, 3];
-                case 6: return [3 /*break*/, 13];
-                case 7:
+                    _g.label = 6;
+                case 6: return [3 /*break*/, 4];
+                case 7: return [3 /*break*/, 14];
+                case 8:
                     e_1_1 = _g.sent();
                     e_1 = { error: e_1_1 };
-                    return [3 /*break*/, 13];
-                case 8:
-                    _g.trys.push([8, , 11, 12]);
-                    if (!(_d && !_d.done && (_a = _c["return"]))) return [3 /*break*/, 10];
-                    return [4 /*yield*/, _a.call(_c)];
+                    return [3 /*break*/, 14];
                 case 9:
+                    _g.trys.push([9, , 12, 13]);
+                    if (!(_d && !_d.done && (_a = _c["return"]))) return [3 /*break*/, 11];
+                    return [4 /*yield*/, _a.call(_c)];
+                case 10:
                     _g.sent();
-                    _g.label = 10;
-                case 10: return [3 /*break*/, 12];
-                case 11:
+                    _g.label = 11;
+                case 11: return [3 /*break*/, 13];
+                case 12:
                     if (e_1) throw e_1.error;
                     return [7 /*endfinally*/];
-                case 12: return [7 /*endfinally*/];
-                case 13:
+                case 13: return [7 /*endfinally*/];
+                case 14:
                     code_collector = new indexer_1.CellCollector(indexer, {
                         lock: {
                             code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
@@ -115,36 +118,36 @@ function main() {
                         data: "any"
                     });
                     cells_c = [];
-                    _g.label = 14;
-                case 14:
-                    _g.trys.push([14, 19, 20, 25]);
-                    _e = __asyncValues(code_collector.collect());
                     _g.label = 15;
-                case 15: return [4 /*yield*/, _e.next()];
-                case 16:
-                    if (!(_f = _g.sent(), !_f.done)) return [3 /*break*/, 18];
+                case 15:
+                    _g.trys.push([15, 20, 21, 26]);
+                    _e = __asyncValues(code_collector.collect());
+                    _g.label = 16;
+                case 16: return [4 /*yield*/, _e.next()];
+                case 17:
+                    if (!(_f = _g.sent(), !_f.done)) return [3 /*break*/, 19];
                     cell = _f.value;
                     cells_c.push(cell);
-                    _g.label = 17;
-                case 17: return [3 /*break*/, 15];
-                case 18: return [3 /*break*/, 25];
-                case 19:
+                    _g.label = 18;
+                case 18: return [3 /*break*/, 16];
+                case 19: return [3 /*break*/, 26];
+                case 20:
                     e_2_1 = _g.sent();
                     e_2 = { error: e_2_1 };
-                    return [3 /*break*/, 25];
-                case 20:
-                    _g.trys.push([20, , 23, 24]);
-                    if (!(_f && !_f.done && (_b = _e["return"]))) return [3 /*break*/, 22];
-                    return [4 /*yield*/, _b.call(_e)];
+                    return [3 /*break*/, 26];
                 case 21:
+                    _g.trys.push([21, , 24, 25]);
+                    if (!(_f && !_f.done && (_b = _e["return"]))) return [3 /*break*/, 23];
+                    return [4 /*yield*/, _b.call(_e)];
+                case 22:
                     _g.sent();
-                    _g.label = 22;
-                case 22: return [3 /*break*/, 24];
-                case 23:
+                    _g.label = 23;
+                case 23: return [3 /*break*/, 25];
+                case 24:
                     if (e_2) throw e_2.error;
                     return [7 /*endfinally*/];
-                case 24: return [7 /*endfinally*/];
-                case 25:
+                case 25: return [7 /*endfinally*/];
+                case 26:
                     funding_cell = cells[0];
                     code_cell = cells_c[0];
                     inputs = immutable_1.List([
@@ -175,18 +178,18 @@ function main() {
                         outputs: outputs,
                         cellDeps: deps
                     });
-                    return [4 /*yield*/, common_scripts_1.secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(10000000000))];
-                case 26:
+                    return [4 /*yield*/, common_scripts_1.secp256k1Blake160.payFee(skeleton, "ckt1qyqyu7sm46vlzl2qpz60zk5mszfypj3p8j3srahsnn", BigInt(10000000000))];
+                case 27:
                     skeleton = _g.sent();
                     skeleton = common_scripts_1.secp256k1Blake160.prepareSigningEntries(skeleton);
                     console.log(JSON.stringify(helpers_1.createTransactionFromSkeleton(skeleton), null, 2));
                     console.log(skeleton.get("signingEntries").toArray());
-                    signatures = ["0x1e2fa5028bf1032a89b684918ad96e0988223e9b2d13f2ef0db32103f0272cd7225bbcbf74fdd2e00b1361b52b2ebe7973dfb1f7f61b4e7139dbb34d606b219200"];
+                    signatures = ["0xb74773b8c445f159d960f652a36736e21b05635562ece3125082e655077d6b962b008190ecf08aeed36e627da6020023637ed65553ef167fff918c45ea23721800"];
                     tx = helpers_1.sealTransaction(skeleton, signatures);
                     console.log(tx);
                     rpc = new ckb_js_toolkit_1.RPC("http://127.0.0.1:8114");
                     return [4 /*yield*/, rpc.send_transaction(tx)];
-                case 27:
+                case 28:
                     res = _g.sent();
                     console.log(res);
                     console.log("END");

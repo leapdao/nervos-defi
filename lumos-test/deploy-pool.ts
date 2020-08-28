@@ -36,7 +36,7 @@ async function main() {
     const indexer = new Indexer("http://127.0.0.1:8114", "./indexed-data");
     indexer.startForever();
 
-    // await sleep(10000);
+    await sleep(10000);
     let tip = await indexer.tip();
     console.log(tip);
 
@@ -45,7 +45,7 @@ async function main() {
             code_hash:
                 "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
             hash_type: "type",
-            args: "0xcc38ca2352de33fabae029878e83c4c85561ed1f",
+            args: "0x4e7a1bae99f17d4008b4f15a9b809240ca213ca3",
         },
         data: "any",
     });
@@ -112,16 +112,14 @@ async function main() {
         cellDeps: deps,
     });
 
-    skeleton = await secp256k1Blake160.payFee(skeleton, "ckt1qyqvcwx2ydfduvl6htsznpuws0zvs4tpa50sd3c4sw", BigInt(10000000000));
+    skeleton = await secp256k1Blake160.payFee(skeleton, "ckt1qyqyu7sm46vlzl2qpz60zk5mszfypj3p8j3srahsnn", BigInt(10000000000));
     skeleton = secp256k1Blake160.prepareSigningEntries(skeleton);
 
     console.log(JSON.stringify(createTransactionFromSkeleton(skeleton), null, 2));
 
     console.log(skeleton.get("signingEntries").toArray());
 
-    // return;
-
-    let signatures = ["0x1e2fa5028bf1032a89b684918ad96e0988223e9b2d13f2ef0db32103f0272cd7225bbcbf74fdd2e00b1361b52b2ebe7973dfb1f7f61b4e7139dbb34d606b219200"];
+    let signatures = ["0xb74773b8c445f159d960f652a36736e21b05635562ece3125082e655077d6b962b008190ecf08aeed36e627da6020023637ed65553ef167fff918c45ea23721800"];
 
     const tx = sealTransaction(skeleton, signatures);
 
