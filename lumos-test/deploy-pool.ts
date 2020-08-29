@@ -1,4 +1,4 @@
-import { initializeConfig, getConfig } from "@ckb-lumos/config-manager";
+import { initializeConfig, getConfig, predefined } from "@ckb-lumos/config-manager";
 import { Indexer, CellCollector } from "@ckb-lumos/indexer";
 import { List, Record, Map } from "immutable";
 import {
@@ -33,12 +33,12 @@ function sleep(ms) {
 }
 
 async function main() {
-    const indexer = new Indexer("http://127.0.0.1:8114", "./indexed-data");
+    const indexer = new Indexer("http://aggron.leapdao.org:8114", "./indexed-data-aggron");
     indexer.startForever();
 
-    await sleep(10000);
-    let tip = await indexer.tip();
-    console.log(tip);
+    // await sleep(10000);
+    // let tip = await indexer.tip();
+    // console.log(tip);
 
     let collector = new CellCollector(indexer, {
         lock: {
@@ -70,10 +70,10 @@ async function main() {
         cells_c.push(cell);
     }
 
-
-
     let funding_cell = cells[0];
-    let code_cell = cells_c[0];
+    let code_cell = cells_c.filter((cell) => {
+        return cell.out_point.tx_hash === '0x2161417ecaa7e2c796456923e7be023cfec694a1eb6c6eb074da44372b7545f3'; 
+    })[0];
 
 
 
@@ -97,11 +97,11 @@ async function main() {
                 capacity: "0x2363e7f00",
                 lock: {
                     code_hash: utils.ckbHash(code_cell.data).serializeJson(),
-                    hash_type: "type" as HashType,
+                    hash_type: "data" as HashType,
                     args: "0x00",
                 },
             },
-            data: "0x0000000000000000000000000000002000000000000000000000000000000020",
+            data: "0x000000000000000000000002363e7f00000000000000000000000002363e7f00",
         }
     ]);
 
@@ -119,14 +119,16 @@ async function main() {
 
     console.log(skeleton.get("signingEntries").toArray());
 
-    let signatures = ["0xb74773b8c445f159d960f652a36736e21b05635562ece3125082e655077d6b962b008190ecf08aeed36e627da6020023637ed65553ef167fff918c45ea23721800"];
+    // return;
+
+    let signatures = ["0xcdf3d020e414a1c2d342b91d7a5fa137b15b6bb829479a946649b987ce5994f061618a2bb4299b3e94711b5d48d25d2dfe4e9d921ed51b5ef8e2f0711a27d82d00"];
 
     const tx = sealTransaction(skeleton, signatures);
 
     console.log(tx);
 
 
-    const rpc = new RPC("http://127.0.0.1:8114");
+    const rpc = new RPC("http://aggron.leapdao.org:8114");
     let res = await rpc.send_transaction(tx);
     console.log(res);
 

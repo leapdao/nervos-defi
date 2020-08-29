@@ -60,19 +60,25 @@ config_manager_1.initializeConfig();
 function sleep(ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
 }
+function bigIntToLeHex(x) {
+    // TODO: won't work for nubers larger than 8 bytes
+    var buf = Buffer.alloc(16);
+    buf.writeBigInt64LE(x);
+    return '0x' + buf.toString('hex').padEnd(32, '0');
+}
 function main() {
     var e_1, _a, e_2, _b, e_3, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell, inputs, deps, parsePoolData, _k, newPoolData, x, capacityHex, lockScript, lockHash, outputs, skeleton, signatures, tx, rpc, res;
+        var indexer, collector, collector1, collector2, cells_f, _d, _e, cell, e_1_1, cells_user, _f, _g, cell, e_2_1, cells_use, _h, _j, cell, e_3_1, pool_cell, code_cell, funding_cell, inputs, deps, parsePoolData, newPoolCapacity, _k, newPoolData, x, lockScript, lockHash, newPoolCapacityHex, outputs, skeleton, signatures, tx, rpc, res;
         return __generator(this, function (_l) {
             switch (_l.label) {
                 case 0:
-                    indexer = new indexer_1.Indexer("http://127.0.0.1:8114", "./indexed-data");
+                    indexer = new indexer_1.Indexer("http://aggron.leapdao.org:8114", "./indexed-data-aggron");
                     indexer.startForever();
                     collector = new indexer_1.CellCollector(indexer, {
                         lock: {
                             code_hash: poolCodeHash,
-                            hash_type: "type",
+                            hash_type: "data",
                             args: "0x00"
                         },
                         data: "any"
@@ -187,45 +193,70 @@ function main() {
                 case 35: return [7 /*endfinally*/];
                 case 36:
                     pool_cell = cells_f[0];
-                    code_cell = cells_user[0];
+                    code_cell = cells_user.filter(function (cell) {
+                        return cell.out_point.tx_hash === '0x2161417ecaa7e2c796456923e7be023cfec694a1eb6c6eb074da44372b7545f3';
+                    })[0];
                     funding_cell = cells_use[0];
                     console.log(pool_cell, code_cell, funding_cell);
                     inputs = immutable_1.List([
                         pool_cell,
-                        funding_cell
+                        funding_cell,
                     ]);
                     deps = immutable_1.List([
+                        // pool logic
                         {
                             out_point: code_cell.out_point,
                             dep_type: "code"
+                        },
+                        // SECP256k1Blake160 code 
+                        // taken from https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0024-ckb-system-script-list/0024-ckb-system-script-list.md
+                        {
+                            out_point: {
+                                index: '0x0',
+                                tx_hash: '0xf8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37'
+                            },
+                            dep_type: "dep_group"
+                        },
+                        // find SUDT script
+                        {
+                            out_point: {
+                                index: '0x0',
+                                tx_hash: '0xc1b2ae129fad7465aaa9acc9785f842ba3e6e8b8051d899defa89f5508a77958'
+                            },
+                            dep_type: "code"
                         }
                     ]);
-                    parsePoolData = function (poolData, depositCapacity) {
+                    parsePoolData = function (poolData, poolCap, fundCap, outCap) {
                         var cCKB_total_supply = BigInt(poolData.slice(0, 34));
                         var CKB_total_supply = BigInt("0x" + poolData.slice(34, 66));
-                        var x = BigInt(depositCapacity) * cCKB_total_supply / CKB_total_supply;
+                        var depositAmount = fundCap - (poolCap + fundCap - outCap);
+                        var x = depositAmount * cCKB_total_supply / CKB_total_supply;
                         var new_cCKB_total_supply = cCKB_total_supply + x;
-                        var new_CKB_total_supply = CKB_total_supply + BigInt(depositCapacity);
+                        var new_CKB_total_supply = CKB_total_supply + BigInt(depositAmount);
+                        console.log('here:', new_cCKB_total_supply, cCKB_total_supply + x);
+                        console.log('FEEEEEE!!!!', poolCap + fundCap - (outCap + BigInt(14200000000)));
                         return ["0x" + new_cCKB_total_supply.toString(16).padStart(32, "0") + new_CKB_total_supply.toString(16).padStart(32, "0"), x];
                     };
-                    _k = parsePoolData(pool_cell.data, funding_cell.cell_output.capacity), newPoolData = _k[0], x = _k[1];
+                    newPoolCapacity = BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(14200000000);
+                    _k = parsePoolData(pool_cell.data, BigInt(pool_cell.cell_output.capacity), BigInt(funding_cell.cell_output.capacity), newPoolCapacity), newPoolData = _k[0], x = _k[1];
                     console.log(newPoolData, x);
-                    capacityHex = "0x" + (BigInt(pool_cell.cell_output.capacity) + BigInt(funding_cell.cell_output.capacity) - BigInt(14200000000)).toString(16);
-                    console.log('capacityHex', capacityHex);
                     console.log('poolcell', pool_cell);
                     lockScript = {
-                        hash_type: 'type',
+                        hash_type: 'data',
                         code_hash: poolCodeHash,
-                        args: EMPTY_ARGS
+                        args: '0x00'
                     };
                     lockHash = base_1.utils.computeScriptHash(lockScript);
+                    // 142 is the capacity of the second output
+                    newPoolCapacity = newPoolCapacity - BigInt(100000000);
+                    newPoolCapacityHex = "0x" + newPoolCapacity.toString(16);
                     outputs = immutable_1.List([
                         {
                             cell_output: {
-                                capacity: capacityHex,
+                                capacity: newPoolCapacityHex,
                                 lock: {
                                     code_hash: base_1.utils.ckbHash(code_cell.data).serializeJson(),
-                                    hash_type: "type",
+                                    hash_type: "data",
                                     args: "0x00"
                                 }
                             },
@@ -241,11 +272,11 @@ function main() {
                                 },
                                 type: {
                                     code_hash: '0x48dbf59b4c7ee1547238021b4869bceedf4eea6b43772e5d66ef8865b6ae7212',
-                                    hash_type: 'type',
+                                    hash_type: 'data',
                                     args: lockHash
                                 }
                             },
-                            data: '0x' + x.toString(16).padStart(32, '0')
+                            data: bigIntToLeHex(x)
                         }
                     ]);
                     skeleton = helpers_1.TransactionSkeleton({
@@ -260,10 +291,10 @@ function main() {
                     console.log('after fee');
                     console.log(JSON.stringify(helpers_1.createTransactionFromSkeleton(skeleton), null, 2));
                     console.log(skeleton.get("signingEntries").toArray());
-                    signatures = ["0xe4e8e42baa3e95f0bc31246e83adcfc98e7d6fc452e473096d9b8d12868aa09f184d4c81fc94ad351bc5c6866bfab32540fe6c70b36db42f15f1b70b18ff1f0201"];
+                    signatures = ["0x2093926377b66569bceffa81e20187777fb0cddcd35f09fd871ff6a26ebdaf2513137af09bba2df9f0803fc1db18132329f21ed20d6c0222fd2cb089d0931e7401"];
                     tx = helpers_1.sealTransaction(skeleton, signatures);
                     console.log(tx);
-                    rpc = new ckb_js_toolkit_1.RPC("http://127.0.0.1:8114");
+                    rpc = new ckb_js_toolkit_1.RPC("http://aggron.leapdao.org:8114");
                     return [4 /*yield*/, rpc.send_transaction(tx)];
                 case 37:
                     res = _l.sent();
