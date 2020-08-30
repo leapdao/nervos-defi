@@ -22,6 +22,7 @@ export const DataManager = ({ children }) => {
   const fetchCkbBalance = async (activeAccount, balanceDispatch) => {
     if (activeAccount) {
       try {
+        // const dummy = await dappService.fetchPoolBalance();
         const balance = await dappService.fetchCkbBalance(
           activeAccount.lockScript
         );

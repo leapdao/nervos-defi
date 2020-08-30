@@ -1,8 +1,6 @@
 import express from "express";
-import { indexer, rpc } from "../index";
-import { Script } from "@ckb-lumos/base";
-import { common, secp256k1Blake160 } from "@ckb-lumos/common-scripts";
-import { TransactionSkeleton, sealTransaction } from "@ckb-lumos/helpers";
+import { rpc } from "../index";
+import { sealTransaction } from "@ckb-lumos/helpers";
 import { buildTransferCkbTx, getCkbBalance } from "../generators/ckb";
 
 const routes = express.Router();

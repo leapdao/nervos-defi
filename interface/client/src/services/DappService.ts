@@ -10,6 +10,11 @@ export interface CkbTransferParams {
   txFee: BigInt;
 }
 
+export interface Balance {
+  CKB: BigInt,
+  cCKB: BigInt
+}
+
 export interface PoolDepositParams {
   sender: string;
   senderArgs: string;
@@ -55,6 +60,15 @@ class DappService {
       lockScript,
     });
     return BigInt(response.payload.balance);
+  }
+
+  async fetchPoolBalance(): Promise<Balance> {
+    const response = await Api.get(this.dappServerUri, "/pool/get-balance");
+    console.log(response);
+    return {
+      cCKB: BigInt(0),
+      CKB: BigInt(0)
+    };    
   }
 
   async buildTransferCkbTx(params: CkbTransferParams): Promise<CkbTransfer> {
