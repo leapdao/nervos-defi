@@ -1,21 +1,12 @@
-import { indexer, rpc } from "../index";
-import { common, secp256k1Blake160 } from "@ckb-lumos/common-scripts";
+import { indexer } from "../index";
+import { secp256k1Blake160 } from "@ckb-lumos/common-scripts";
 import { CellCollector } from "@ckb-lumos/indexer";
 import { TransactionSkeleton } from "@ckb-lumos/helpers";
-import { List, Record, Map } from "immutable";
+import { List } from "immutable";
 import {
-  core,
   HexString,
-  Script,
   Cell,
   CellDep,
-  Address,
-  CellProvider,
-  Hash,
-  PackedSince,
-  Transaction,
-  WitnessArgs,
-  Input,
   DepType,
   HashType,
   utils,
@@ -24,8 +15,10 @@ import {
 const POOL_CODE_HASH = "0x25bb89d7e601d70d2111c5ced8effc7a7c0d8a459e55f3efe193c0ff0bf07ce1";
 const EMPTY_ARGS = "0x0000000000000000000000000000000000000000";
 const SECP256k1Blake160CodeHash = "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8";
-const SUDT_CODE_HASH = "0x48dbf59b4c7ee1547238021b4869bceedf4eea6b43772e5d66ef8865b6ae7212"; // TODO:: get correct code hash
+const SUDT_CODE_HASH = "0x48dbf59b4c7ee1547238021b4869bceedf4eea6b43772e5d66ef8865b6ae7212";
 const CODE_TX_HASH = "0x2161417ecaa7e2c796456923e7be023cfec694a1eb6c6eb074da44372b7545f3";
+const ISSUED_SUDT_HASH = "0x135a8ac34a12f5885fe671912a8d3c6f42dd31920d4eb65ca80039a808725bd6";
+
 const POOL_LOGIC_DEP = {
   out_point: {
     index: '0x0',
@@ -56,18 +49,17 @@ export interface PoolDepositParams {
 }
 
 export interface Balance {
-  cCKB: BigInt,
-  CKB: BigInt
+  cCKB: string,
+  CKB: string
 }
 
 export const getPoolBalance = async (): Promise<Balance> => {
   const pool_cell = await getLatestPoolCell();
-  const balance = {
-    cCKB: BigInt(pool_cell.data.slice(0, 34)),
-    CKB: BigInt("0x" + pool_cell.data.slice(34, 66))
-  }
-  return balance;
-};
+  return {
+    cCKB: (BigInt(pool_cell.data.slice(0, 34))).toString(),
+    CKB: (BigInt("0x" + pool_cell.data.slice(34, 66))).toString()
+  };
+}
 
 const getLatestPoolCell = async (): Promise<Cell> => {
   let collector = new CellCollector(indexer, {
@@ -116,18 +108,73 @@ const parsePoolData = (depositAmount:bigint, poolData: HexString,  poolCap: bigi
   const cCKB_total_supply = BigInt(poolData.slice(0, 34));
   const CKB_total_supply = BigInt("0x" + poolData.slice(34, 66));
 
-  // const depositAmount = fundCap - (poolCap + fundCap - outCap);
-
-  // sender - search for cells with sudt typescript and pool lock hash as owner.  lock script as owner.
-  // sum the data in cells.
-
   const x = depositAmount * cCKB_total_supply / CKB_total_supply;
 
   const new_cCKB_total_supply = cCKB_total_supply + x;
   const new_CKB_total_supply = CKB_total_supply + BigInt(depositAmount);
 
+  
   return ["0x" + new_cCKB_total_supply.toString(16).padStart(32, "0")
     + new_CKB_total_supply.toString(16).padStart(32, "0"), x];
+}
+
+export const getDepositBalance = async (senderLockScriptArgs) => {
+
+  const lockScript = {
+    hash_type: "data" as HashType,
+    code_hash: POOL_CODE_HASH,
+    args: '0x00',
+  }
+  const SUDT_OWNER = utils.computeScriptHash(lockScript);
+
+  let collector = new CellCollector(indexer, {
+    lock: {
+      code_hash: SECP256k1Blake160CodeHash,
+      hash_type: "type",
+      args: senderLockScriptArgs,
+    },
+    type: {
+      code_hash: SUDT_CODE_HASH,
+      hash_type: "data",
+      args: SUDT_OWNER
+    },
+  });
+
+  let totalDeposits: bigint = BigInt(0);
+  for await (const cell of collector.collect()) {
+    let halfString = cell.data.slice(0, 18);
+    totalDeposits += BigInt(hexStringToArrayBuffer(halfString));
+  };
+  return totalDeposits;
+}
+
+const hexStringToArrayBuffer = (hexString: string) => {
+  // remove the leading 0x
+  hexString = hexString.replace(/^0x/, '');
+  
+  // ensure even number of characters
+  if (hexString.length % 2 != 0) {
+      console.log('WARNING: expecting an even number of characters in the hexString');
+  }
+  
+  // check for some non-hex characters
+  var bad = hexString.match(/[G-Z\s]/i);
+  if (bad) {
+      console.log('WARNING: found non-hex characters', bad);    
+  }
+  
+  // split the string into pairs of octets
+  var pairs = hexString.match(/[\dA-F]{2}/gi);
+  
+  // convert the octets to integers
+  var integers = pairs.map(function(s) {
+      return parseInt(s, 16);
+  });
+
+  var array = new Uint8Array(integers); 
+
+  const view = new DataView(array.buffer);
+  return view.getBigInt64(0, true);
 }
 
 const getFundingCell = async (senderLockScriptArgs: HexString, amount: string): Promise<Cell> => {
@@ -158,6 +205,7 @@ const bigIntToLeHex = (x: bigint) => {
   buf.writeBigInt64LE(x);
   return '0x' + buf.toString('hex').padEnd(32, '0');
 }
+
 export const buildDepositTx = async (params: PoolDepositParams) => {
   const { sender, senderArgs, amount, txFee } = params;
 

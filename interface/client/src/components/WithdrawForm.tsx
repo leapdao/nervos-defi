@@ -20,13 +20,18 @@ import {
   TxStatus,
 } from "../stores/TxTrackerStore";
 import { CenteredRow, CenteredCol } from "./common/Grid";
+import { formatBalance } from "../utils/formatters";
 
 type Inputs = {
   recipientAddress: string;
   amount: string;
 };
 
-const DepositForm = () => {
+interface Props {
+  amount: string | bigint;
+}
+
+const DepositForm = (props: Props) => {
   const { walletState } = useContext(WalletContext);
   const { txTrackerDispatch } = useContext(TxTrackerContext);
   const [error, setError] = useState("");
@@ -69,7 +74,7 @@ const DepositForm = () => {
     <FormWrapper onSubmit={handleSubmit(onSubmit)}>
       <Form style={{ minWidth: 450 }}>
         <FormTitle>Withdraw</FormTitle>
-        <h3>Available 20 cCKB </h3>
+        <h3>Locked {formatBalance(props.amount.toString())} cCKB </h3>
         <CenteredRow>
           <CenteredCol>
             <FormLabel htmlFor="amount">Amount</FormLabel>

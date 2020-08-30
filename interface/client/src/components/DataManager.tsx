@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 
 import { BalanceContext, BalanceActions } from "../stores/BalanceStore";
 import { WalletContext } from "../stores/WalletStore";
+import { PoolContext, PoolActions } from "../stores/PoolStore";
 import { dappService } from "../services/DappService";
 import React from "react";
 import { useInterval } from "../hooks/useInterval";
@@ -15,19 +16,37 @@ import {
 export const DataManager = ({ children }) => {
   const { balanceDispatch } = useContext(BalanceContext);
   const { walletState } = useContext(WalletContext);
+  const { poolDispatch } = useContext(PoolContext);
   const { txTrackerState, txTrackerDispatch } = useContext(TxTrackerContext);
 
   const { activeAccount } = walletState;
 
-  const fetchCkbBalance = async (activeAccount, balanceDispatch) => {
+  const fetchPoolBalance = async (poolDispatch) => {
+    try {
+      const balance = await dappService.fetchPoolBalance();
+      poolDispatch({
+        type: PoolActions.SetPoolBalance,
+        balance: balance.CKB,
+      });
+    } catch (error) {
+      console.warn("fetchPoolBalance", error);
+    };
+  }
+
+  const fetchCkbBalance = async (activeAccount, balanceDispatch, poolDispatch) => {
     if (activeAccount) {
       try {
-        // const dummy = await dappService.fetchPoolBalance();
         const balance = await dappService.fetchCkbBalance(
           activeAccount.lockScript
         );
 
-        console.log("fetchCkbBalance", activeAccount, balance);
+        const depositBalance = await dappService.fetchDepositBalance(activeAccount.lockScript.args);
+
+        console.log("Balance from ", depositBalance);
+        poolDispatch({
+          type: PoolActions.SetPoolDeposit,
+          poolDeposit: depositBalance,
+        });
 
         balanceDispatch({
           type: BalanceActions.SetCkbBalance,
@@ -44,10 +63,11 @@ export const DataManager = ({ children }) => {
   useEffect(() => {
     if (activeAccount) {
       (async () => {
-        await fetchCkbBalance(activeAccount, balanceDispatch);
+        await fetchPoolBalance(poolDispatch);
+        await fetchCkbBalance(activeAccount, balanceDispatch,poolDispatch);
       })();
     }
-  }, [activeAccount, balanceDispatch]);
+  }, [activeAccount, balanceDispatch, poolDispatch]);
 
   // Fetch tracked transaction status + ckb balance on block update
   useInterval(async () => {
@@ -72,8 +92,9 @@ export const DataManager = ({ children }) => {
         });
       }
       if (activeAccount) {
-        fetchCkbBalance(activeAccount, balanceDispatch);
+        fetchCkbBalance(activeAccount, balanceDispatch, poolDispatch);
       }
+      fetchPoolBalance(poolDispatch);
     }
   }, 1000);
 

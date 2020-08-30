@@ -21,6 +21,7 @@ import {
 } from "../stores/TxTrackerStore";
 import { CenteredRow, CenteredCol } from "./common/Grid";
 import { formatBalance } from "../utils/formatters";
+import { TransactionStatusList } from "./TransactionStatusList";
 
 interface Props {
   amount: string | number;
@@ -75,7 +76,7 @@ const DepositForm = (props: Props) => {
     <FormWrapper onSubmit={handleSubmit(onSubmit)}>
       <Form style={{ minWidth: 450 }}>
         <FormTitle>Lend</FormTitle>
-        <h3>Available {formatBalance(props.amount.toString())} - CKB </h3>
+        <h3>Wallet {formatBalance(props.amount.toString())} - CKB </h3>
         <CenteredRow>
           <CenteredCol>
             <FormLabel htmlFor="amount">Amount</FormLabel>
@@ -97,6 +98,7 @@ const DepositForm = (props: Props) => {
           <FormError>{error}</FormError>
         )}
       </Form>
+      <TransactionStatusList />
     </FormWrapper>
   );
 };

@@ -10,6 +10,7 @@ import { BalanceStore } from "./stores/BalanceStore";
 import { WalletStore } from "./stores/WalletStore";
 import { DataManager } from "./components/DataManager";
 import { TxTrackerStore } from "./stores/TxTrackerStore";
+import { PoolStore } from "./stores/PoolStore";
 
 import Account from "./pages/Account";
 import Borrow from "./pages/Borrow";
@@ -44,47 +45,49 @@ const Nav = styled.li`
 function App() {
   return (
     <BalanceStore>
-      <WalletStore>
-        <ModalStore>
-          <TxTrackerStore>
-            <DataManager>
-              <div className="App">
-                <div className="app-shell">
-                  <Header />
-                  <WalletModal />
-                  <Container>
-                    <ContentWrapper>
-                      <HashRouter>
-                        <NavBar>
-                          <Nav>
-                            <Link to="/account">Account</Link>
-                          </Nav>
-                          <Nav>
-                            <Link to="/borrow">Borrow</Link>
-                          </Nav>
-                          <Nav>
-                            <Link to="/lend">Lend</Link>
-                          </Nav>
-                          <Nav>
-                            <Link to="/liquidate">Liquidate</Link>
-                          </Nav>
-                        </NavBar>
-                        <Switch>
-                          <Route path="/account" component={Account} />
-                          <Route path="/borrow" component={Borrow} />
-                          <Route path="/lend" component={Lend} />
-                          <Route path="/liquidate" component={Liquidate} />
-                          <Redirect from="/" to="/lend" />
-                        </Switch>
-                      </HashRouter>
-                    </ContentWrapper>
-                  </Container>
+      <PoolStore>
+        <WalletStore>
+          <ModalStore>
+            <TxTrackerStore>
+              <DataManager>
+                <div className="App">
+                  <div className="app-shell">
+                    <Header />
+                    <WalletModal />
+                    <Container>
+                      <ContentWrapper>
+                        <HashRouter>
+                          <NavBar>
+                            <Nav>
+                              <Link to="/account">Account</Link>
+                            </Nav>
+                            <Nav>
+                              <Link to="/borrow">Borrow</Link>
+                            </Nav>
+                            <Nav>
+                              <Link to="/lend">Lend</Link>
+                            </Nav>
+                            <Nav>
+                              <Link to="/liquidate">Liquidate</Link>
+                            </Nav>
+                          </NavBar>
+                          <Switch>
+                            <Route path="/account" component={Account} />
+                            <Route path="/borrow" component={Borrow} />
+                            <Route path="/lend" component={Lend} />
+                            <Route path="/liquidate" component={Liquidate} />
+                            <Redirect from="/" to="/lend" />
+                          </Switch>
+                        </HashRouter>
+                      </ContentWrapper>
+                    </Container>
+                  </div>
                 </div>
-              </div>
-            </DataManager>
-          </TxTrackerStore>
-        </ModalStore>
-      </WalletStore>
+              </DataManager>
+            </TxTrackerStore>
+          </ModalStore>
+        </WalletStore>
+      </PoolStore>
     </BalanceStore>
   );
 }

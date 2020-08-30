@@ -1,17 +1,28 @@
 import express from "express";
 import { rpc } from "../index";
 import { sealTransaction } from "@ckb-lumos/helpers";
-import { buildDepositTx, getPoolBalance } from "../generators/pool";
+import { buildDepositTx, getPoolBalance, getDepositBalance } from "../generators/pool";
 
 const routes = express.Router();
 
 routes.get("/get-balance", async (req: any, res) => {
-  const { senderArgs } = req.body;
   try {
     const balance = await getPoolBalance();
     return res
       .status(200)
       .json(JSON.stringify({ balance }));
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+routes.post("/get-deposit-balance", async (req: any, res) => {
+  const { senderArgs } = req.body;
+  try {
+    const balance = await getDepositBalance(senderArgs);
+    return res
+      .status(200)
+      .json(JSON.stringify({ balance: balance.toString() }));
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

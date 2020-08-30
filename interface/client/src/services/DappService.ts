@@ -64,11 +64,15 @@ class DappService {
 
   async fetchPoolBalance(): Promise<Balance> {
     const response = await Api.get(this.dappServerUri, "/pool/get-balance");
-    console.log(response);
-    return {
-      cCKB: BigInt(0),
-      CKB: BigInt(0)
-    };    
+    return response.payload.balance;    
+  }
+
+  async fetchDepositBalance(senderArgs): Promise<BigInt> {
+    const response = await Api.post(this.dappServerUri,
+      "/pool/get-deposit-balance",
+      { senderArgs });
+    
+      return BigInt(response.payload.balance);    
   }
 
   async buildTransferCkbTx(params: CkbTransferParams): Promise<CkbTransfer> {
