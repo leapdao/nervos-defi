@@ -3,15 +3,16 @@ import { useForm } from "react-hook-form";
 import {
   Button,
   FormWrapper,
+  FormLabel,
   FormTitle,
   FormInput,
+  FormSelect,
   FormError,
   Form,
 } from "./common/Form";
-import { dappService, CkbTransferParams } from "../services/DappService";
+import { dappService } from "../services/DappService";
 import { WalletContext } from "../stores/WalletStore";
 import { getConfig } from "../config/lumosConfig";
-import { TransactionStatusList } from "./TransactionStatusList";
 import { toShannons } from "../utils/formatters";
 import { walletService } from "../services/WalletService";
 import {
@@ -19,13 +20,14 @@ import {
   TxTrackerActions,
   TxStatus,
 } from "../stores/TxTrackerStore";
+import { CenteredRow, CenteredCol } from "./common/Grid";
 
 type Inputs = {
   recipientAddress: string;
   amount: string;
 };
 
-const TransferCkbForm = () => {
+const DepositForm = () => {
   const { walletState } = useContext(WalletContext);
   const { txTrackerDispatch } = useContext(TxTrackerContext);
   const [error, setError] = useState("");
@@ -38,20 +40,20 @@ const TransferCkbForm = () => {
     if (!walletState.activeAccount) return;
 
     try {
-      const params: CkbTransferParams = {
+      const params = {
         sender: walletState.activeAccount.address,
-        recipient: formData.recipientAddress,
+        senderArgs: walletState.activeAccount.lockScript.args, 
         amount: toShannons(formData.amount),
         txFee: defaultTxFee,
       };
 
-      const tx = await dappService.buildTransferCkbTx(params);
+      const tx = await dappService.buildPoolDeposit(params);
 
       const signatures = await walletService.signTransaction(
         tx,
         walletState.activeAccount.lockHash
       );
-      const txHash = await dappService.transferCkb(params, signatures);
+      const txHash = await dappService.transferDepositToPool(params, signatures);
 
       setError("");
 
@@ -67,35 +69,45 @@ const TransferCkbForm = () => {
 
   return (
     <FormWrapper onSubmit={handleSubmit(onSubmit)}>
-      <Form style={{width: 450}}>
-        <FormTitle>Transfer CKB</FormTitle>
-        <label htmlFor="recipientAddress">Recipient Address</label>
-        <FormInput
-          type="text"
-          name="recipientAddress"
-          ref={register({ required: true })}
-        />
-        {errors.recipientAddress && (
-          <FormError>Please enter recipient address</FormError>
-        )}
-        <label htmlFor="amount">Amount</label>
-        <FormInput
-          type="number"
-          name="amount"
-          step="0.00000001"
-          ref={register({ required: true })}
-        />
+      <Form style={{ minWidth: 450 }}>
+        <FormTitle>Lend</FormTitle>
+        <CenteredRow>
+          <CenteredCol>
+              <FormLabel htmlFor="amount">Token</FormLabel>
+            </CenteredCol>
+            <CenteredCol>
+              <FormSelect
+                ref={register({ required: true })}
+              >
+                <option>CKB</option>
+                <option>SUDT</option>
+              </FormSelect>
+            </CenteredCol>
+        </CenteredRow>
+        <CenteredRow>
+          <CenteredCol>
+            <FormLabel htmlFor="amount">Amount</FormLabel>
+          </CenteredCol>
+          <CenteredCol>
+            <FormInput
+              type="number"
+              name="amount"
+              step="0.00000001"
+              ref={register({ required: true })}
+            />
+          </CenteredCol>
+          {errors.amount && <FormError>Please enter amount</FormError>}
+        </CenteredRow>
         {errors.amount && <FormError>Please enter amount</FormError>}
         <Button disabled={!walletState.activeAccount} type="submit">
-          Transfer
+          Deposit
         </Button>
         {error.length > 0 && (
           <FormError>{error}</FormError>
         )}
       </Form>
-      <TransactionStatusList />
     </FormWrapper>
   );
 };
 
-export default TransferCkbForm;
+export default DepositForm;

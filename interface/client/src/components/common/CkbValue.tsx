@@ -2,13 +2,13 @@ import React from "react";
 import { formatBalance } from "../../utils/formatters";
 
 interface Props {
-  amount: string | null;
+  amount: string | number;
   showPlaceholder?: boolean;
 }
 
 const CkbValue = (props: Props) => {
   if (props.showPlaceholder) {
-    return <React.Fragment>- CKB</React.Fragment>;
+    return <React.Fragment> 0 - CKB</React.Fragment>;
   } else if (props.amount) {
     return <React.Fragment>{formatBalance(props.amount.toString())} CKB</React.Fragment>;
   } else {

@@ -10,6 +10,13 @@ export interface CkbTransferParams {
   txFee: BigInt;
 }
 
+export interface PoolDepositParams {
+  sender: string;
+  senderArgs: string;
+  amount: BigInt | string;
+  txFee: BigInt | string;
+}
+
 export type Transaction = GenericTransaction | CkbTransfer;
 
 export interface GenericTransaction {
@@ -64,16 +71,14 @@ class DappService {
     return data;
   }
 
-  async buildPoolDeposit(params): Promise<any> {
-    const response = await Api.post(this.dappServerUri, "/pool/deposit-build", {
-      sender: params.sender,
-      amount: params.amount.toString(),
-      txFee: params.txFee.toString(),
-    });
+  async buildPoolDeposit(params: PoolDepositParams): Promise<any> {
+    const response = await Api.post(this.dappServerUri,
+      "/pool/deposit-build",
+      stringifyPoolDepositParams(params));
 
     const data = response.payload;
-    data.params = parseCkbTransferParams(data.params);
-    data.description = "Spin DEFi - CKB Transfer Request"; // Description to display on Keyperring
+    data.params = parsePoolDepositParams(data.params);
+    data.description = "Spin DEFi - Lend pool deposit"; // Description to display on Keyperring
     return data;
   } 
 
@@ -103,9 +108,9 @@ class DappService {
     return response.payload.txHash as Hash;
   }
 
-  async transferDepositToPool(params, signatures: HexString[]): Promise<Hash> {
+  async transferDepositToPool(params: PoolDepositParams, signatures: HexString[]): Promise<Hash> {
     const response = await Api.post(this.dappServerUri, "/pool/deposit-transfer", {
-      params: stringifyCkbTransferParams(params),
+      params: stringifyPoolDepositParams(params),
       signatures,
     });
 
@@ -136,6 +141,24 @@ export const stringifyCkbTransferParams = (params: CkbTransferParams) => {
     sender: params.sender,
     amount: params.amount.toString(),
     recipient: params.recipient,
+    txFee: params.txFee.toString(),
+  };
+};
+
+export const parsePoolDepositParams = (params: PoolDepositParams) => {
+  return {
+    sender: params.sender,
+    senderArgs: params.senderArgs,
+    amount: BigInt(params.amount),
+    txFee: BigInt(params.txFee),
+  };
+};
+
+export const stringifyPoolDepositParams = (params: PoolDepositParams) => {
+  return {
+    sender: params.sender,
+    senderArgs: params.senderArgs,
+    amount: params.amount.toString(),
     txFee: params.txFee.toString(),
   };
 };

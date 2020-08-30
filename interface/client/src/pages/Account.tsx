@@ -3,13 +3,13 @@ import { BalanceContext } from "../stores/BalanceStore";
 import { WalletContext } from "../stores/WalletStore";
 import TransferCkbForm from "../components/TransferCkbForm";
 import CkbValue from "../components/common/CkbValue";
-import { Grid } from "../components/common/Grid";
+import { Grid, Row, Col } from "../components/common/Grid";
 
 const Page = () => {
   const { balanceState } = useContext(BalanceContext);
   const { walletState } = useContext(WalletContext);
 
-  let balance: string | null = null;
+  let balance: string | number = 0;
 
   if (
     walletState.activeAccount &&
@@ -22,12 +22,17 @@ const Page = () => {
 
   return (
     <Grid>
-      <h1>Spin DEFi!</h1>
-      <h3>
-        Your Ckb Balance:{" "}
-        <CkbValue amount={balance} showPlaceholder={!balance} />
-      </h3>
-      <TransferCkbForm />
+      <Row>
+        <Col>
+          <h3>
+            Your Ckb Balance:{" "}
+            <CkbValue amount={balance} showPlaceholder={!balance} />
+          </h3>
+        </Col>
+        <Col>
+          <TransferCkbForm />
+        </Col>
+      </Row>
     </Grid>
   );
 };

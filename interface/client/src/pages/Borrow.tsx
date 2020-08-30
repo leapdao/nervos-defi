@@ -1,15 +1,16 @@
 import React, { useContext } from "react";
 import { BalanceContext } from "../stores/BalanceStore";
 import { WalletContext } from "../stores/WalletStore";
-import TransferCkbForm from "../components/TransferCkbForm";
 import CkbValue from "../components/common/CkbValue";
-import { Grid } from "../components/common/Grid";
+import { Grid, CenteredRow, CenteredCol, Col } from "../components/common/Grid";
+import BorrowForm from "../components/BorrowForm";
+import BorrowCellList from "../components/BorrowCellList";
 
 const Page = () => {
   const { balanceState } = useContext(BalanceContext);
   const { walletState } = useContext(WalletContext);
 
-  let balance: string | null = null;
+  let balance: string | number = 0;
 
   if (
     walletState.activeAccount &&
@@ -22,12 +23,15 @@ const Page = () => {
 
   return (
     <Grid>
-      <h1>Spin DEFi!</h1>
-      <h3>
-        Your Ckb Balance:{" "}
-        <CkbValue amount={balance} showPlaceholder={!balance} />
-      </h3>
-      <TransferCkbForm />
+      <CenteredRow>
+        <CenteredCol>
+          <h3><CkbValue amount={balance} showPlaceholder={!balance} /></h3>
+          <BorrowForm />
+        </CenteredCol>
+        <Col>
+          <BorrowCellList headerTitle="List of borrowed tokens" />
+        </Col>
+      </CenteredRow>
     </Grid>
   );
 };

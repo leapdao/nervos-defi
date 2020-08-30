@@ -24,6 +24,10 @@ export const Form = styled.form`
 `;
 
 export const FormTitle = styled.h2``;
+export const FormSelect = styled.select`
+  min-width: 205px;
+  ${sharedStyles};
+`;
 export const FormInput = styled.input`
   width: 100%;
   ${sharedStyles};
